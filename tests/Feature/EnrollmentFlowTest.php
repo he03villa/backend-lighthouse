@@ -2,8 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Enums\FieldNoteVisibility;
+use App\Models\FieldNote;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 use Tests\Helpers\TenantTestHelpers;
 use Tests\TestCase;
@@ -15,7 +20,7 @@ class EnrollmentFlowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\RolePermissionSeeder::class);
+        $this->seed(RolePermissionSeeder::class);
     }
 
     protected function createParticipant(string $token, string $tenantId, string $guardianEmail): string
@@ -96,6 +101,71 @@ class EnrollmentFlowTest extends TestCase
             ->assertJsonPath('data.completed_activities', 1)
             ->assertJsonPath('data.total_activities', 2)
             ->assertJsonPath('data.percentage', 50);
+    }
+
+    public function test_image_evidence_and_review_creates_private_field_note(): void
+    {
+        Storage::fake('public');
+
+        $owner = $this->registerWithTenant(['email' => 'owner@example.com']);
+
+        $programId = $this->authedApi($owner['token'], $owner['tenantId'])
+            ->postJson('/api/v1/programs', [
+                'name' => 'Programa',
+                'modules' => [['name' => 'Módulo', 'activities' => [['name' => 'Actividad', 'type' => 'upload']]]],
+            ])
+            ->json('data.id');
+
+        $participantId = $this->createParticipant($owner['token'], $owner['tenantId'], 'madre@example.com');
+
+        $enrollment = $this->authedApi($owner['token'], $owner['tenantId'])
+            ->postJson('/api/v1/enrollments', [
+                'participant_id' => $participantId,
+                'program_id' => $programId,
+            ])
+            ->assertStatus(201)
+            ->json('data');
+
+        $guardianToken = JWTAuth::fromUser(User::where('email', 'madre@example.com')->first());
+
+        $activityId = $this->authedApi($owner['token'], $owner['tenantId'])
+            ->getJson('/api/v1/programs/'.$programId)
+            ->json('data.modules.0.activities.0.id');
+
+        $submission = $this->authedApi($guardianToken, $owner['tenantId'])
+            ->postJson('/api/v1/activities/'.$activityId.'/submit', [
+                'enrollment_id' => $enrollment['id'],
+                'evidence_type' => 'image',
+                'evidence_file' => UploadedFile::fake()->image('evidencia.jpg'),
+            ])
+            ->assertStatus(201)
+            ->assertJsonPath('data.evidences.0.type', 'image')
+            ->json('data');
+
+        $evidenceUrl = $submission['evidences'][0]['content'];
+        $this->assertStringStartsWith('/storage/evidences/', $evidenceUrl);
+
+        Storage::disk('public')->assertExists('evidences/'.$owner['tenantId'].'/'.basename($evidenceUrl));
+
+        $this->authedApi($owner['token'], $owner['tenantId'])
+            ->patchJson('/api/v1/submissions/'.$submission['id'].'/review', [
+                'status' => 'approved',
+                'observation' => 'Muy bien hecho.',
+            ])
+            ->assertStatus(200)
+            ->assertJsonPath('data.status', 'approved');
+
+        $note = FieldNote::withoutGlobalScope('tenant')->first();
+
+        $this->assertNotNull($note);
+        $this->assertSame($submission['id'], $note->activity_submission_id);
+        $this->assertSame(FieldNoteVisibility::Private, $note->visibility);
+        $this->assertSame('Muy bien hecho.', $note->content);
+
+        $this->authedApi($owner['token'], $owner['tenantId'])
+            ->getJson('/api/v1/enrollments/'.$enrollment['id'].'/progress')
+            ->assertStatus(200)
+            ->assertJsonPath('data.percentage', 100);
     }
 
     public function test_guardian_cannot_review_evidence(): void

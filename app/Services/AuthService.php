@@ -2,16 +2,20 @@
 
 namespace App\Services;
 
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 class AuthService
 {
-    public function __construct(protected TenantService $tenants)
-    {
-    }
+    public function __construct(
+        protected TenantService $tenants,
+        protected PermissionRegistrar $permissions,
+    ) {}
 
     public function register(array $data): array
     {
@@ -33,7 +37,7 @@ class AuthService
         $token = JWTAuth::fromUser($user);
 
         return [
-            'user' => $user,
+            'user' => $this->userWithAccess($user),
             'token' => $token,
             'tenant' => $tenant,
         ];
@@ -49,7 +53,7 @@ class AuthService
         $user->forceFill(['last_login_at' => now()])->save();
 
         return [
-            'user' => $user->load('tenants'),
+            'user' => $this->userWithAccess($user),
             'token' => $token,
         ];
     }
@@ -66,6 +70,48 @@ class AuthService
 
     public function me(): User
     {
-        return Auth::user()->load('tenants');
+        return $this->userWithAccess(Auth::user());
+    }
+
+    public function userWithAccess(User $user): User
+    {
+        $user->load('tenants');
+
+        return $user->setRelation('access', $this->accessData($user));
+    }
+
+    protected function accessData(User $user): array
+    {
+        $roles = [];
+        $permissions = [];
+
+        $tenants = $user->tenants->map(function (Tenant $tenant) use ($user, &$roles, &$permissions) {
+            $this->permissions->setPermissionsTeamId($tenant->id);
+
+            $tenantRoles = $user->roles()->pluck('name')->values()->all();
+            $tenantPermissions = $user->roles()->with('permissions')->get()
+                ->flatMap(fn ($role) => $role->permissions->pluck('name'))
+                ->unique()->sort()->values()->all();
+
+            $roles = array_merge($roles, $tenantRoles);
+            $permissions = array_merge($permissions, $tenantPermissions);
+
+            return [
+                'tenant' => $tenant,
+                'roles' => $tenantRoles,
+                'permissions' => $tenantPermissions,
+            ];
+        })->values();
+
+        if ($user->is_super_admin) {
+            $roles = ['super-admin'];
+            $permissions = Permission::where('guard_name', 'api')->pluck('name')->sort()->values()->all();
+        }
+
+        return [
+            'tenants' => $tenants,
+            'roles' => array_values(array_unique($roles)),
+            'permissions' => array_values(array_unique($permissions)),
+        ];
     }
 }
