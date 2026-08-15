@@ -97,7 +97,7 @@ class SubmissionService
 
             SubmissionReviewed::dispatch($submission->enrollment);
 
-            return $submission->load('evidences', 'activity');
+            return $submission->load('evidences', 'activity', 'enrollment.participant', 'enrollment.program', 'reviewedBy');
         });
     }
 
