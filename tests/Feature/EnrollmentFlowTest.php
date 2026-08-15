@@ -56,6 +56,10 @@ class EnrollmentFlowTest extends TestCase
             ])
             ->json('data.id');
 
+        $this->authedApi($owner['token'], $owner['tenantId'])
+            ->postJson('/api/v1/programs/'.$programId.'/publish')
+            ->assertStatus(200);
+
         $participantId = $this->createParticipant($owner['token'], $owner['tenantId'], 'madre@example.com');
 
         $guardian = User::where('email', 'madre@example.com')->first();
@@ -115,6 +119,10 @@ class EnrollmentFlowTest extends TestCase
                 'modules' => [['name' => 'Módulo', 'activities' => [['name' => 'Actividad', 'type' => 'upload']]]],
             ])
             ->json('data.id');
+
+        $this->authedApi($owner['token'], $owner['tenantId'])
+            ->postJson('/api/v1/programs/'.$programId.'/publish')
+            ->assertStatus(200);
 
         $participantId = $this->createParticipant($owner['token'], $owner['tenantId'], 'madre@example.com');
 
@@ -179,6 +187,10 @@ class EnrollmentFlowTest extends TestCase
             ])
             ->json('data.id');
 
+        $this->authedApi($owner['token'], $owner['tenantId'])
+            ->postJson('/api/v1/programs/'.$programId.'/publish')
+            ->assertStatus(200);
+
         $participantId = $this->createParticipant($owner['token'], $owner['tenantId'], 'madre@example.com');
         $guardianToken = JWTAuth::fromUser(User::where('email', 'madre@example.com')->first());
 
@@ -205,6 +217,47 @@ class EnrollmentFlowTest extends TestCase
             ->assertStatus(403);
     }
 
+    public function test_cannot_enroll_in_unpublished_program(): void
+    {
+        $owner = $this->registerWithTenant(['email' => 'owner@example.com']);
+
+        $programId = $this->authedApi($owner['token'], $owner['tenantId'])
+            ->postJson('/api/v1/programs', ['name' => 'Programa'])
+            ->json('data.id');
+
+        $participantId = $this->createParticipant($owner['token'], $owner['tenantId'], 'madre@example.com');
+
+        $this->authedApi($owner['token'], $owner['tenantId'])
+            ->postJson('/api/v1/enrollments', [
+                'participant_id' => $participantId,
+                'program_id' => $programId,
+            ])
+            ->assertStatus(422);
+    }
+
+    public function test_cannot_enroll_in_program_from_another_tenant(): void
+    {
+        $ownerA = $this->registerWithTenant(['email' => 'a@example.com', 'tenant_name' => 'Club A']);
+        $ownerB = $this->registerWithTenant(['email' => 'b@example.com', 'tenant_name' => 'Club B']);
+
+        $programId = $this->authedApi($ownerA['token'], $ownerA['tenantId'])
+            ->postJson('/api/v1/programs', ['name' => 'Programa A'])
+            ->json('data.id');
+
+        $this->authedApi($ownerA['token'], $ownerA['tenantId'])
+            ->postJson('/api/v1/programs/'.$programId.'/publish')
+            ->assertStatus(200);
+
+        $participantId = $this->createParticipant($ownerB['token'], $ownerB['tenantId'], 'madre@example.com');
+
+        $this->authedApi($ownerB['token'], $ownerB['tenantId'])
+            ->postJson('/api/v1/enrollments', [
+                'participant_id' => $participantId,
+                'program_id' => $programId,
+            ])
+            ->assertStatus(422);
+    }
+
     public function test_dropping_enrollment_marks_it_dropped(): void
     {
         $owner = $this->registerWithTenant(['email' => 'owner@example.com']);
@@ -212,6 +265,10 @@ class EnrollmentFlowTest extends TestCase
         $programId = $this->authedApi($owner['token'], $owner['tenantId'])
             ->postJson('/api/v1/programs', ['name' => 'Programa'])
             ->json('data.id');
+
+        $this->authedApi($owner['token'], $owner['tenantId'])
+            ->postJson('/api/v1/programs/'.$programId.'/publish')
+            ->assertStatus(200);
 
         $participantId = $this->createParticipant($owner['token'], $owner['tenantId'], 'madre@example.com');
 

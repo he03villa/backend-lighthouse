@@ -11,6 +11,7 @@ use App\Models\Program;
 use App\Services\ProgramService;
 use App\Traits\ApiResponseTrait;
 use Exception;
+use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 class ProgramController extends Controller
@@ -24,6 +25,14 @@ class ProgramController extends Controller
         tags: ['Programs'],
         summary: 'Listar programas',
         security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\QueryParameter(
+                name: 'published',
+                description: 'Filtrar solo programas publicados (true/false).',
+                required: false,
+                schema: new OA\Schema(type: 'boolean'),
+            ),
+        ],
         responses: [
             new OA\Response(response: 200, description: 'Lista de programas', content: new OA\JsonContent(
                 type: 'object',
@@ -37,10 +46,12 @@ class ProgramController extends Controller
             new OA\Response(response: 500, description: 'Error interno', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ],
     )]
-    public function index()
+    public function index(Request $request)
     {
         try {
-            return $this->successResponse(ProgramResource::collection($this->service->list()));
+            $published = $request->filled('published') ? $request->boolean('published') : null;
+
+            return $this->successResponse(ProgramResource::collection($this->service->list($published)));
         } catch (Exception $e) {
             report($e);
 

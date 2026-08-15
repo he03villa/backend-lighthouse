@@ -83,6 +83,32 @@ class ProgramFlowTest extends TestCase
             ->assertJsonPath('data.modules.0.activities.0.name', 'Actividad 1');
     }
 
+    public function test_list_filters_published_programs(): void
+    {
+        $result = $this->registerWithTenant();
+
+        $api = fn () => $this->authedApi($result['token'], $result['tenantId']);
+
+        $api()->postJson('/api/v1/programs', ['name' => 'Publicado']);
+        $publishedId = $api()->postJson('/api/v1/programs', ['name' => 'A Publicar'])
+            ->json('data.id');
+
+        $api()->postJson('/api/v1/programs/'.$publishedId.'/publish')->assertStatus(200);
+
+        $api()->getJson('/api/v1/programs?published=true')
+            ->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'A Publicar');
+
+        $api()->getJson('/api/v1/programs')
+            ->assertStatus(200)
+            ->assertJsonCount(2, 'data');
+
+        $api()->getJson('/api/v1/programs?published=')
+            ->assertStatus(200)
+            ->assertJsonCount(2, 'data');
+    }
+
     public function test_publish_and_unpublish_program(): void
     {
         $result = $this->registerWithTenant();

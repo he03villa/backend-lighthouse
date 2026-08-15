@@ -22,9 +22,13 @@ class ProgramService
 
         return Storage::disk('public')->url($path);
     }
-    public function list(): Collection
+
+    public function list(?bool $published = null): Collection
     {
-        return Program::query()->with('modules.activities')->get();
+        return Program::query()
+            ->with('modules.activities')
+            ->when($published !== null, fn ($q) => $q->where('is_published', $published))
+            ->get();
     }
 
     public function create(array $data): Program
