@@ -82,7 +82,7 @@ class SubmissionController extends Controller
     public function show(ActivitySubmission $submission)
     {
         try {
-            return $this->successResponse(new ActivitySubmissionResource($submission->load('evidences', 'activity', 'enrollment.participant')));
+            return $this->successResponse(new ActivitySubmissionResource($submission->load('evidences', 'activity', 'enrollment.participant', 'enrollment.program')));
         } catch (Exception $e) {
             report($e);
 
