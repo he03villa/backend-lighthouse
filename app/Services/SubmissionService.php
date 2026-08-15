@@ -20,7 +20,7 @@ class SubmissionService
 {
     public function list(array $filters = []): Collection
     {
-        $query = ActivitySubmission::query()->with('activity', 'enrollment.participant', 'evidences');
+        $query = ActivitySubmission::query()->with('activity', 'enrollment.participant', 'enrollment.program', 'evidences');
 
         if (! empty($filters['status'])) {
             $query->where('status', SubmissionStatus::from($filters['status']));
