@@ -43,6 +43,8 @@ class TenantController extends Controller
 
             return $this->successResponse(TenantResource::collection($tenants));
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to list tenants', 500);
         }
     }
@@ -75,6 +77,8 @@ class TenantController extends Controller
 
             return $this->successResponse(new TenantResource($tenant), 'Tenant created', 201);
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to create tenant', 500);
         }
     }

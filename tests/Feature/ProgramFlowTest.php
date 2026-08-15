@@ -2,8 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\Program;
+use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 use Tests\Helpers\TenantTestHelpers;
 use Tests\TestCase;
 
@@ -14,7 +18,7 @@ class ProgramFlowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\RolePermissionSeeder::class);
+        $this->seed(RolePermissionSeeder::class);
     }
 
     public function test_owner_can_create_program_with_modules_and_activities(): void
@@ -128,11 +132,58 @@ class ProgramFlowTest extends TestCase
             ])
             ->json('data.id');
 
-        $parent = \App\Models\User::findOrFail($parentId);
-        $parentToken = \PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth::fromUser($parent);
+        $parent = User::findOrFail($parentId);
+        $parentToken = JWTAuth::fromUser($parent);
 
         $this->authedApi($parentToken, $result['tenantId'])
             ->postJson('/api/v1/programs', ['name' => 'No debería pasar'])
             ->assertStatus(403);
+    }
+
+    public function test_owner_can_upload_program_thumbnail(): void
+    {
+        Storage::fake('public');
+
+        $result = $this->registerWithTenant();
+
+        $this->authedApi($result['token'], $result['tenantId'])
+            ->post('/api/v1/programs/thumbnail', [
+                'thumbnail' => UploadedFile::fake()->image('thumb.jpg', 200, 200),
+            ], ['Accept' => 'application/json'])
+            ->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.url', fn (string $url) => str_contains($url, '/storage/programs/'));
+
+        $this->assertNotEmpty(Storage::disk('public')->allFiles('programs/'.$result['tenantId']));
+    }
+
+    public function test_unauthorized_role_cannot_upload_thumbnail(): void
+    {
+        $result = $this->registerWithTenant();
+
+        $parentId = $this->authedApi($result['token'], $result['tenantId'])
+            ->postJson('/api/v1/tenants/'.$result['tenantId'].'/members', [
+                'email' => 'parent-thumb@example.com',
+                'role' => 'parent',
+            ])
+            ->json('data.id');
+
+        $parent = User::findOrFail($parentId);
+        $parentToken = JWTAuth::fromUser($parent);
+
+        $this->authedApi($parentToken, $result['tenantId'])
+            ->post('/api/v1/programs/thumbnail', [
+                'thumbnail' => UploadedFile::fake()->image('thumb.jpg'),
+            ], ['Accept' => 'application/json'])
+            ->assertStatus(403);
+    }
+
+    public function test_thumbnail_requires_an_image_file(): void
+    {
+        $result = $this->registerWithTenant();
+
+        $this->authedApi($result['token'], $result['tenantId'])
+            ->post('/api/v1/programs/thumbnail', [], ['Accept' => 'application/json'])
+            ->assertStatus(422);
     }
 }

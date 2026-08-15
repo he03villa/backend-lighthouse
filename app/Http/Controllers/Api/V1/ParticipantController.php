@@ -48,6 +48,8 @@ class ParticipantController extends Controller
         try {
             return $this->successResponse(ParticipantResource::collection($this->service->list()));
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to list participants', 500);
         }
     }
@@ -81,6 +83,8 @@ class ParticipantController extends Controller
 
             return $this->successResponse(new ParticipantResource($participant), 'Participant created', 201);
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to create participant', 500);
         }
     }
@@ -111,6 +115,8 @@ class ParticipantController extends Controller
         try {
             return $this->successResponse(new ParticipantResource($participant->load('guardians', 'groups')));
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to show participant', 500);
         }
     }
@@ -148,6 +154,8 @@ class ParticipantController extends Controller
                 'Participant updated',
             );
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to update participant', 500);
         }
     }
@@ -174,6 +182,8 @@ class ParticipantController extends Controller
 
             return $this->successResponse(null, 'Participant deleted');
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to delete participant', 500);
         }
     }
@@ -218,6 +228,8 @@ class ParticipantController extends Controller
 
             return $this->successResponse(new ParticipantResource($participant), 'Guardian added');
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to add guardian', 500);
         }
     }
@@ -245,6 +257,8 @@ class ParticipantController extends Controller
 
             return $this->successResponse(null, 'Guardian removed');
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to remove guardian', 500);
         }
     }
@@ -275,6 +289,8 @@ class ParticipantController extends Controller
         try {
             return $this->successResponse(FieldNoteResource::collection($this->fieldNotes->list($participant)));
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to list field notes', 500);
         }
     }

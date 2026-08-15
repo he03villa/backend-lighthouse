@@ -51,6 +51,8 @@ class FieldNoteController extends Controller
 
             return $this->successResponse(FieldNoteResource::collection($this->service->list($participant)));
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to list field notes', 500);
         }
     }
@@ -83,6 +85,8 @@ class FieldNoteController extends Controller
 
             return $this->successResponse(new FieldNoteResource($note), 'Field note created', 201);
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to create field note', 500);
         }
     }
@@ -113,6 +117,8 @@ class FieldNoteController extends Controller
         try {
             return $this->successResponse(new FieldNoteResource($fieldNote->load('author', 'participant', 'submission.activity')));
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to show field note', 500);
         }
     }

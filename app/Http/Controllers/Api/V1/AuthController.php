@@ -52,6 +52,8 @@ class AuthController extends Controller
                 'tenant' => $result['tenant'] ? new TenantResource($result['tenant']) : null,
             ], 'Registration successful', 201);
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Registration failed', 500);
         }
     }
@@ -93,6 +95,8 @@ class AuthController extends Controller
                 'token' => $result['token'],
             ], 'Login successful');
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Login failed', 500);
         }
     }
@@ -124,6 +128,8 @@ class AuthController extends Controller
                 'token' => $this->service->refresh(),
             ], 'Token refreshed');
         } catch (Exception $e) {
+            report($e);
+
             return $this->unauthorizedResponse('Token refresh failed');
         }
     }
@@ -147,6 +153,8 @@ class AuthController extends Controller
 
             return $this->successResponse(null, 'Logged out successfully');
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Logout failed', 500);
         }
     }
@@ -174,6 +182,8 @@ class AuthController extends Controller
         try {
             return $this->successResponse(new UserResource($this->service->me()));
         } catch (Exception $e) {
+            report($e);
+
             return $this->unauthorizedResponse('Unauthenticated');
         }
     }

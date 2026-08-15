@@ -52,6 +52,8 @@ class ModuleController extends Controller
                 201,
             );
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to create module', 500);
         }
     }
@@ -90,6 +92,8 @@ class ModuleController extends Controller
                 'Module updated',
             );
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to update module', 500);
         }
     }
@@ -117,6 +121,8 @@ class ModuleController extends Controller
 
             return $this->successResponse(null, 'Module deleted');
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to delete module', 500);
         }
     }

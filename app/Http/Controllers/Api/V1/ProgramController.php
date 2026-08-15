@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProgramRequest;
+use App\Http\Requests\StoreThumbnailRequest;
 use App\Http\Requests\UpdateProgramRequest;
 use App\Http\Resources\ProgramResource;
 use App\Models\Program;
@@ -41,6 +42,8 @@ class ProgramController extends Controller
         try {
             return $this->successResponse(ProgramResource::collection($this->service->list()));
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to list programs', 500);
         }
     }
@@ -67,6 +70,52 @@ class ProgramController extends Controller
             new OA\Response(response: 500, description: 'Error interno', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ],
     )]
+    #[OA\Post(
+        path: '/api/v1/programs/thumbnail',
+        tags: ['Programs'],
+        summary: 'Subir portada de programa',
+        description: 'Sube una imagen de portada y devuelve su URL pública para guardarla en el programa.',
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(required: true, content: new OA\MediaType(
+            mediaType: 'multipart/form-data',
+            schema: new OA\Schema(
+                type: 'object',
+                required: ['thumbnail'],
+                properties: [
+                    new OA\Property(property: 'thumbnail', type: 'string', format: 'binary'),
+                ],
+            ),
+        )),
+        responses: [
+            new OA\Response(response: 200, description: 'URL de la portada', content: new OA\JsonContent(
+                type: 'object',
+                properties: [
+                    new OA\Property(property: 'success', type: 'boolean', example: true),
+                    new OA\Property(property: 'message', type: 'string'),
+                    new OA\Property(property: 'data', type: 'object', properties: [
+                        new OA\Property(property: 'url', type: 'string'),
+                    ]),
+                ],
+            )),
+            new OA\Response(response: 401, description: 'No autenticado', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Sin permisos', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 422, description: 'Error de validación', content: new OA\JsonContent(ref: '#/components/schemas/ValidationErrorResponse')),
+            new OA\Response(response: 500, description: 'Error interno', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ],
+    )]
+    public function uploadThumbnail(StoreThumbnailRequest $request)
+    {
+        try {
+            $url = $this->service->storeThumbnail($request->validated()['thumbnail']);
+
+            return $this->successResponse(['url' => $url], 'Thumbnail uploaded');
+        } catch (Exception $e) {
+            report($e);
+
+            return $this->errorResponse('Failed to upload thumbnail', 500);
+        }
+    }
+
     public function store(StoreProgramRequest $request)
     {
         try {
@@ -76,6 +125,8 @@ class ProgramController extends Controller
                 201,
             );
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to create program', 500);
         }
     }
@@ -106,6 +157,8 @@ class ProgramController extends Controller
         try {
             return $this->successResponse(new ProgramResource($program->load('modules.activities')));
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to show program', 500);
         }
     }
@@ -143,6 +196,8 @@ class ProgramController extends Controller
                 'Program updated',
             );
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to update program', 500);
         }
     }
@@ -169,6 +224,8 @@ class ProgramController extends Controller
 
             return $this->successResponse(null, 'Program deleted');
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to delete program', 500);
         }
     }
@@ -200,6 +257,8 @@ class ProgramController extends Controller
         try {
             return $this->successResponse(new ProgramResource($this->service->publish($program)), 'Program published');
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to publish program', 500);
         }
     }
@@ -231,6 +290,8 @@ class ProgramController extends Controller
         try {
             return $this->successResponse(new ProgramResource($this->service->unpublish($program)), 'Program unpublished');
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to unpublish program', 500);
         }
     }

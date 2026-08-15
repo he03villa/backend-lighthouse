@@ -44,6 +44,7 @@ Route::prefix('v1')->group(function () {
                 Route::post('groups/{group}/members', [GroupController::class, 'addMember']);
                 Route::delete('groups/{group}/members/{participant}', [GroupController::class, 'removeMember']);
 
+                Route::post('programs/thumbnail', [ProgramController::class, 'uploadThumbnail']);
                 Route::apiResource('programs', ProgramController::class)->except(['edit', 'create']);
                 Route::post('programs/{program}/publish', [ProgramController::class, 'publish']);
                 Route::post('programs/{program}/unpublish', [ProgramController::class, 'unpublish']);

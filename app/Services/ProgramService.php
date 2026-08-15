@@ -5,11 +5,23 @@ namespace App\Services;
 use App\Models\Activity;
 use App\Models\Module;
 use App\Models\Program;
+use App\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ProgramService
 {
+    public function __construct(protected TenantContext $tenantContext) {}
+
+    public function storeThumbnail(UploadedFile $file): string
+    {
+        $tenantId = $this->tenantContext->id() ?? 'system';
+        $path = $file->store('programs/'.$tenantId, 'public');
+
+        return Storage::disk('public')->url($path);
+    }
     public function list(): Collection
     {
         return Program::query()->with('modules.activities')->get();

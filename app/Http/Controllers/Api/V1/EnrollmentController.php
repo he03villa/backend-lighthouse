@@ -45,6 +45,8 @@ class EnrollmentController extends Controller
         try {
             return $this->successResponse(EnrollmentResource::collection($this->service->list()));
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to list enrollments', 500);
         }
     }
@@ -79,6 +81,8 @@ class EnrollmentController extends Controller
                 201,
             );
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to create enrollment', 500);
         }
     }
@@ -111,6 +115,8 @@ class EnrollmentController extends Controller
                 new EnrollmentResource($enrollment->load('participant', 'program', 'progressRecord')),
             );
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to show enrollment', 500);
         }
     }
@@ -138,6 +144,8 @@ class EnrollmentController extends Controller
 
             return $this->successResponse(null, 'Enrollment dropped');
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to drop enrollment', 500);
         }
     }
@@ -174,6 +182,8 @@ class EnrollmentController extends Controller
 
             return $this->successResponse(new ProgressResource($record));
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to show progress', 500);
         }
     }

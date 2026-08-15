@@ -43,6 +43,8 @@ class GroupController extends Controller
         try {
             return $this->successResponse(GroupResource::collection($this->service->list()));
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to list groups', 500);
         }
     }
@@ -73,6 +75,8 @@ class GroupController extends Controller
         try {
             return $this->successResponse(new GroupResource($this->service->create($request->validated())), 'Group created', 201);
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to create group', 500);
         }
     }
@@ -103,6 +107,8 @@ class GroupController extends Controller
         try {
             return $this->successResponse(new GroupResource($group->load('participants')));
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to show group', 500);
         }
     }
@@ -140,6 +146,8 @@ class GroupController extends Controller
                 'Group updated',
             );
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to update group', 500);
         }
     }
@@ -166,6 +174,8 @@ class GroupController extends Controller
 
             return $this->successResponse(null, 'Group deleted');
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to delete group', 500);
         }
     }
@@ -204,6 +214,8 @@ class GroupController extends Controller
                 'Member added',
             );
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to add member', 500);
         }
     }
@@ -239,6 +251,8 @@ class GroupController extends Controller
                 'Member removed',
             );
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to remove member', 500);
         }
     }

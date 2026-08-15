@@ -52,6 +52,8 @@ class SubmissionController extends Controller
 
             return $this->successResponse(ActivitySubmissionResource::collection($submissions));
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to list submissions', 500);
         }
     }
@@ -82,6 +84,8 @@ class SubmissionController extends Controller
         try {
             return $this->successResponse(new ActivitySubmissionResource($submission->load('evidences', 'activity', 'enrollment.participant')));
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to show submission', 500);
         }
     }
@@ -124,6 +128,8 @@ class SubmissionController extends Controller
 
             return $this->successResponse(new ActivitySubmissionResource($submission), 'Evidence submitted', 201);
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to submit evidence', 500);
         }
     }
@@ -160,6 +166,8 @@ class SubmissionController extends Controller
 
             return $this->successResponse(new ActivitySubmissionResource($submission), 'Submission reviewed');
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to review submission', 500);
         }
     }

@@ -52,6 +52,8 @@ class ActivityController extends Controller
                 201,
             );
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to create activity', 500);
         }
     }
@@ -90,6 +92,8 @@ class ActivityController extends Controller
                 'Activity updated',
             );
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to update activity', 500);
         }
     }
@@ -117,6 +121,8 @@ class ActivityController extends Controller
 
             return $this->successResponse(null, 'Activity deleted');
         } catch (Exception $e) {
+            report($e);
+
             return $this->errorResponse('Failed to delete activity', 500);
         }
     }
