@@ -31,9 +31,10 @@ class BillingFlowTest extends TestCase
         $this->authedApi($owner['token'], $owner['tenantId'])
             ->getJson('/api/v1/billing/plans')
             ->assertStatus(200)
-            ->assertJsonCount(2, 'data')
+            ->assertJsonCount(3, 'data')
             ->assertJsonPath('data.0.slug', 'free')
-            ->assertJsonPath('data.1.slug', 'pro');
+            ->assertJsonPath('data.1.slug', 'pro')
+            ->assertJsonPath('data.2.slug', 'elite');
     }
 
     public function test_free_plan_blocks_creating_more_than_ten_participants(): void

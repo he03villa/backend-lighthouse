@@ -27,29 +27,8 @@ class SyncStripePlans extends Command
         foreach (Plan::where('is_active', true)->get() as $plan) {
             $product = $this->findOrCreateProduct($stripe, $plan);
 
-            if ($plan->price_monthly > 0 && $plan->stripe_price_id_monthly === null) {
-                $price = $stripe->prices->create([
-                    'product' => $product->id,
-                    'unit_amount' => $plan->price_monthly,
-                    'currency' => $plan->currency,
-                    'recurring' => ['interval' => 'month'],
-                    'metadata' => ['lighthouse_plan_id' => $plan->id],
-                ]);
-
-                $plan->update(['stripe_price_id_monthly' => $price->id]);
-            }
-
-            if ($plan->price_yearly > 0 && $plan->stripe_price_id_yearly === null) {
-                $price = $stripe->prices->create([
-                    'product' => $product->id,
-                    'unit_amount' => $plan->price_yearly,
-                    'currency' => $plan->currency,
-                    'recurring' => ['interval' => 'year'],
-                    'metadata' => ['lighthouse_plan_id' => $plan->id],
-                ]);
-
-                $plan->update(['stripe_price_id_yearly' => $price->id]);
-            }
+            $this->syncPrice($stripe, $plan, $product, 'month', $plan->price_monthly, 'stripe_price_id_monthly');
+            $this->syncPrice($stripe, $plan, $product, 'year', $plan->price_yearly, 'stripe_price_id_yearly');
 
             $this->info("Plan {$plan->slug} sincronizado (producto {$product->id}).");
         }
@@ -71,5 +50,39 @@ class SyncStripePlans extends Command
             'description' => $plan->description,
             'metadata' => ['lighthouse_plan_id' => $plan->id],
         ]);
+    }
+
+    private function syncPrice(StripeClient $stripe, Plan $plan, Product $product, string $interval, int $amount, string $column): void
+    {
+        if ($amount <= 0) {
+            return;
+        }
+
+        $priceId = $plan->{$column};
+
+        if ($priceId && $this->matches($stripe, $priceId, $amount, $plan->currency)) {
+            return;
+        }
+
+        if ($priceId) {
+            $stripe->prices->update($priceId, ['active' => false]);
+        }
+
+        $price = $stripe->prices->create([
+            'product' => $product->id,
+            'unit_amount' => $amount,
+            'currency' => $plan->currency,
+            'recurring' => ['interval' => $interval],
+            'metadata' => ['lighthouse_plan_id' => $plan->id],
+        ]);
+
+        $plan->update([$column => $price->id]);
+    }
+
+    private function matches(StripeClient $stripe, string $priceId, int $amount, string $currency): bool
+    {
+        $price = $stripe->prices->retrieve($priceId);
+
+        return $price->unit_amount === $amount && $price->currency === $currency;
     }
 }
