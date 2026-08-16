@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['tenant_id', 'enrollment_id', 'activity_id', 'status', 'reviewed_by_user_id', 'submitted_at', 'reviewed_at'])]
 class ActivitySubmission extends Model
 {
-    use HasUuids, BelongsToTenant;
+    use BelongsToTenant, HasUuids;
 
     protected function casts(): array
     {

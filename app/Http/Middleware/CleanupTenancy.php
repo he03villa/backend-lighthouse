@@ -15,8 +15,7 @@ class CleanupTenancy
     public function __construct(
         protected TenantContext $context,
         protected PermissionRegistrar $permissions,
-    ) {
-    }
+    ) {}
 
     public function handle(Request $request, Closure $next): Response
     {

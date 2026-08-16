@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\ProgramPublished;
 use App\Models\Activity;
 use App\Models\Module;
 use App\Models\Program;
@@ -69,6 +70,8 @@ class ProgramService
     public function publish(Program $program): Program
     {
         $program->update(['is_published' => true]);
+
+        ProgramPublished::dispatch($program);
 
         return $program;
     }

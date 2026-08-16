@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['tenant_id', 'author_user_id', 'participant_id', 'activity_submission_id', 'session_date', 'content', 'visibility'])]
 class FieldNote extends Model
 {
-    use HasUuids, BelongsToTenant;
+    use BelongsToTenant, HasUuids;
 
     protected function casts(): array
     {

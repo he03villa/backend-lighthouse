@@ -12,6 +12,7 @@ class RolePermissionSeeder extends Seeder
         'manage_tenant',
         'manage_programs',
         'manage_participants',
+        'manage_planning',
         'view_all_progress',
         'view_own_progress',
         'submit_evidence',

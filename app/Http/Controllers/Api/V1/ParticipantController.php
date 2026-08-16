@@ -15,6 +15,7 @@ use App\Services\ParticipantService;
 use App\Traits\ApiResponseTrait;
 use Exception;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class ParticipantController extends Controller
 {
@@ -82,6 +83,8 @@ class ParticipantController extends Controller
             $participant = $this->service->create($request->validated());
 
             return $this->successResponse(new ParticipantResource($participant), 'Participant created', 201);
+        } catch (HttpException $e) {
+            throw $e;
         } catch (Exception $e) {
             report($e);
 

@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 #[Fillable(['tenant_id', 'first_name', 'last_name', 'birth_date', 'avatar', 'metadata'])]
 class Participant extends Model
 {
-    use HasUuids, SoftDeletes, BelongsToTenant;
+    use BelongsToTenant, HasUuids, SoftDeletes;
 
     protected function casts(): array
     {

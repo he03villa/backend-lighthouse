@@ -121,7 +121,7 @@ class AuthTest extends TestCase
             ->assertJsonPath('data.user.roles', ['super-admin']);
 
         $permissions = $login->json('data.user.permissions');
-        $this->assertCount(9, $permissions);
+        $this->assertCount(10, $permissions);
         $this->assertContains('manage_tenant', $permissions);
         $this->assertContains('write_journal', $permissions);
     }

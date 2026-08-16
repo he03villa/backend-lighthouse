@@ -19,6 +19,8 @@ class ParticipantService
 
     public function create(array $data): Participant
     {
+        app(TenantLimits::class)->assertWithinLimit('max_participants', Participant::count());
+
         $guardians = $data['guardians'] ?? [];
         unset($data['guardians']);
 

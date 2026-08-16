@@ -8,9 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 
 class RecalculateProgress implements ShouldQueue
 {
-    public function __construct(protected ProgressService $service)
-    {
-    }
+    public function __construct(protected ProgressService $service) {}
 
     public function handle(SubmissionReviewed $event): void
     {

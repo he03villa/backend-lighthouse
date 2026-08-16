@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Tenant;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -15,23 +16,28 @@ class TenantService
             'manage_tenant',
             'manage_programs',
             'manage_participants',
+            'manage_planning',
             'view_all_progress',
             'view_own_progress',
             'submit_evidence',
             'review_evidence',
+            'write_journal',
             'write_field_notes',
         ],
         'admin' => [
             'manage_tenant',
             'manage_programs',
             'manage_participants',
+            'manage_planning',
             'view_all_progress',
             'review_evidence',
+            'write_journal',
             'write_field_notes',
         ],
         'coach' => [
             'manage_programs',
             'manage_participants',
+            'manage_planning',
             'view_all_progress',
             'review_evidence',
             'write_journal',
@@ -88,6 +94,10 @@ class TenantService
     public function invite(User $actor, Tenant $tenant, string $email, string $role): User
     {
         $this->assertCanManage($actor, $tenant);
+
+        if (in_array($role, ['coach', 'admin', 'staff'], true)) {
+            $this->assertCoachLimit($tenant);
+        }
 
         $user = User::firstOrCreate(['email' => $email], [
             'name' => Str::before($email, '@'),
@@ -147,6 +157,21 @@ class TenantService
         $this->permissions->setPermissionsTeamId($tenant->id);
 
         abort_unless($actor->can('manage_tenant'), 403, 'You do not have permission to manage this tenant.');
+    }
+
+    protected function assertCoachLimit(Tenant $tenant): void
+    {
+        app(TenantLimits::class)->assertWithinLimit('max_coaches', $this->countCoaches($tenant), $tenant);
+    }
+
+    public function countCoaches(Tenant $tenant): int
+    {
+        return DB::table('model_has_roles')
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->where('roles.name', 'coach')
+            ->where('roles.guard_name', 'api')
+            ->where('model_has_roles.tenant_id', $tenant->id)
+            ->count();
     }
 
     public function assertMember(Tenant $tenant, User $user): void

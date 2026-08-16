@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 #[Fillable(['tenant_id', 'participant_id', 'program_id', 'status', 'enrolled_at', 'completed_at'])]
 class Enrollment extends Model
 {
-    use HasUuids, BelongsToTenant;
+    use BelongsToTenant, HasUuids;
 
     protected function casts(): array
     {

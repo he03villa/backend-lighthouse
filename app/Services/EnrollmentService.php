@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\EnrollmentStatus;
+use App\Events\EnrollmentCreated;
 use App\Models\Enrollment;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -23,6 +24,8 @@ class EnrollmentService
         ]);
 
         app(ProgressService::class)->initializeFor($enrollment);
+
+        EnrollmentCreated::dispatch($enrollment);
 
         return $enrollment->load('participant', 'program', 'progressRecord');
     }

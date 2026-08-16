@@ -2,15 +2,21 @@
 
 use App\Http\Controllers\Api\V1\ActivityController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BillingController;
 use App\Http\Controllers\Api\V1\EnrollmentController;
 use App\Http\Controllers\Api\V1\FieldNoteController;
 use App\Http\Controllers\Api\V1\GroupController;
+use App\Http\Controllers\Api\V1\JournalController;
 use App\Http\Controllers\Api\V1\MemberController;
 use App\Http\Controllers\Api\V1\ModuleController;
 use App\Http\Controllers\Api\V1\ParticipantController;
+use App\Http\Controllers\Api\V1\PlanningBoardController;
+use App\Http\Controllers\Api\V1\PlanningColumnController;
+use App\Http\Controllers\Api\V1\PlanningTaskController;
 use App\Http\Controllers\Api\V1\ProgramController;
 use App\Http\Controllers\Api\V1\SubmissionController;
 use App\Http\Controllers\Api\V1\TenantController;
+use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +24,8 @@ Route::prefix('v1')->group(function () {
     Route::post('auth/register', [AuthController::class, 'register']);
     Route::post('auth/login', [AuthController::class, 'login']);
     Route::post('auth/refresh', [AuthController::class, 'refresh'])->middleware('auth:api');
+
+    Route::post('stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
 
     Route::middleware('auth:api')->group(function () {
         Route::get('auth/me', [AuthController::class, 'me']);
@@ -66,6 +74,29 @@ Route::prefix('v1')->group(function () {
                 Route::get('field-notes', [FieldNoteController::class, 'index']);
                 Route::post('field-notes', [FieldNoteController::class, 'store']);
                 Route::get('field-notes/{fieldNote}', [FieldNoteController::class, 'show']);
+
+                Route::get('journal', [JournalController::class, 'index']);
+                Route::post('journal', [JournalController::class, 'store']);
+                Route::get('journal/{entry}', [JournalController::class, 'show']);
+                Route::patch('journal/{entry}', [JournalController::class, 'update']);
+                Route::delete('journal/{entry}', [JournalController::class, 'destroy']);
+
+                Route::apiResource('planning/boards', PlanningBoardController::class);
+                Route::post('planning/boards/{board}/columns', [PlanningColumnController::class, 'store']);
+                Route::patch('planning/columns/{column}', [PlanningColumnController::class, 'update']);
+                Route::delete('planning/columns/{column}', [PlanningColumnController::class, 'destroy']);
+                Route::post('planning/columns/{column}/tasks', [PlanningTaskController::class, 'store']);
+                Route::patch('planning/tasks/{task}', [PlanningTaskController::class, 'update']);
+                Route::delete('planning/tasks/{task}', [PlanningTaskController::class, 'destroy']);
+                Route::patch('planning/tasks/{task}/move', [PlanningTaskController::class, 'move']);
+
+                Route::get('billing/plans', [BillingController::class, 'plans']);
+                Route::get('billing/current', [BillingController::class, 'current']);
+                Route::post('billing/subscriptions', [BillingController::class, 'store']);
+                Route::post('billing/subscriptions/swap', [BillingController::class, 'swap']);
+                Route::post('billing/subscriptions/cancel', [BillingController::class, 'cancel']);
+                Route::get('billing/subscriptions/portal', [BillingController::class, 'portal']);
+                Route::get('billing/invoices', [BillingController::class, 'invoices']);
             });
         });
     });

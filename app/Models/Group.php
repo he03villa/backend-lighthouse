@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 #[Fillable(['tenant_id', 'name'])]
 class Group extends Model
 {
-    use HasUuids, BelongsToTenant;
+    use BelongsToTenant, HasUuids;
 
     public function tenant(): BelongsTo
     {

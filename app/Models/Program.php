@@ -8,12 +8,13 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['tenant_id', 'name', 'description', 'age_group', 'duration_weeks', 'is_published', 'thumbnail', 'config'])]
 class Program extends Model
 {
-    use HasUuids, SoftDeletes, BelongsToTenant;
+    use BelongsToTenant, HasUuids, SoftDeletes;
 
     protected function casts(): array
     {
@@ -31,6 +32,11 @@ class Program extends Model
     public function modules(): HasMany
     {
         return $this->hasMany(Module::class)->orderBy('order');
+    }
+
+    public function activities(): HasManyThrough
+    {
+        return $this->hasManyThrough(Activity::class, Module::class, 'program_id', 'module_id');
     }
 
     public function enrollments(): HasMany

@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['tenant_id', 'activity_submission_id', 'participant_id', 'user_id', 'type', 'content', 'metadata'])]
 class Evidence extends Model
 {
-    use HasUuids, BelongsToTenant;
+    use BelongsToTenant, HasUuids;
 
     protected $table = 'evidences';
 

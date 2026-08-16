@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['tenant_id', 'enrollment_id', 'program_id', 'participant_id', 'percentage', 'completed_activities', 'total_activities'])]
 class ProgressRecord extends Model
 {
-    use HasUuids, BelongsToTenant;
+    use BelongsToTenant, HasUuids;
 
     protected function casts(): array
     {
