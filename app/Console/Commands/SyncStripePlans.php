@@ -42,6 +42,13 @@ class SyncStripePlans extends Command
             ->first(fn ($item) => ($item->metadata['lighthouse_plan_id'] ?? null) === $plan->id);
 
         if ($product) {
+            if ($product->name !== $plan->name || $product->description !== $plan->description) {
+                return $stripe->products->update($product->id, [
+                    'name' => $plan->name,
+                    'description' => $plan->description,
+                ]);
+            }
+
             return $product;
         }
 
@@ -58,9 +65,10 @@ class SyncStripePlans extends Command
             return;
         }
 
+        $minorAmount = $this->minorUnit($amount, $plan->currency);
         $priceId = $plan->{$column};
 
-        if ($priceId && $this->matches($stripe, $priceId, $amount, $plan->currency)) {
+        if ($priceId && $this->matches($stripe, $priceId, $minorAmount, $plan->currency)) {
             return;
         }
 
@@ -70,7 +78,7 @@ class SyncStripePlans extends Command
 
         $price = $stripe->prices->create([
             'product' => $product->id,
-            'unit_amount' => $amount,
+            'unit_amount' => $minorAmount,
             'currency' => $plan->currency,
             'recurring' => ['interval' => $interval],
             'metadata' => ['lighthouse_plan_id' => $plan->id],
@@ -84,5 +92,14 @@ class SyncStripePlans extends Command
         $price = $stripe->prices->retrieve($priceId);
 
         return $price->unit_amount === $amount && $price->currency === $currency;
+    }
+
+    private function minorUnit(int $amount, string $currency): int
+    {
+        if (in_array($currency, ['bif', 'clp', 'djf', 'gnf', 'jpy', 'kmf', 'krw', 'mga', 'pyg', 'rwf', 'ugx', 'vnd', 'vuv', 'xaf', 'xof', 'xpf'], true)) {
+            return $amount;
+        }
+
+        return $amount * 100;
     }
 }
