@@ -22,7 +22,10 @@ class PlanningService
 
     public function showBoard(PlanningBoard $board): PlanningBoard
     {
-        return $board->load('columns.tasks');
+        return $board->load([
+            'columns' => fn ($q) => $q->orderBy('position'),
+            'columns.tasks' => fn ($q) => $q->orderBy('position'),
+        ]);
     }
 
     public function createBoard(array $data): PlanningBoard

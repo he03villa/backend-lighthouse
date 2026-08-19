@@ -18,6 +18,7 @@ class JournalService
     public function list(User $user, ?string $participantId = null, ?string $from = null, ?string $to = null): Collection
     {
         $query = JournalEntry::query()
+            ->with(['author', 'participant'])
             ->when($participantId, fn ($q) => $q->where('participant_id', $participantId))
             ->when($from, fn ($q) => $q->whereDate('entry_date', '>=', $from))
             ->when($to, fn ($q) => $q->whereDate('entry_date', '<=', $to))
@@ -42,18 +43,20 @@ class JournalService
     {
         $this->assertVisible($user, $entry);
 
-        return $entry;
+        return $entry->load(['author', 'participant']);
     }
 
     public function create(User $author, array $data): JournalEntry
     {
-        return JournalEntry::create([
+        $entry = JournalEntry::create([
             'author_user_id' => $author->id,
             'participant_id' => $data['participant_id'] ?? null,
             'entry_date' => $data['entry_date'] ?? now()->toDateString(),
             'content' => $data['content'],
             'visibility' => $data['visibility'] ?? 'private',
         ]);
+
+        return $entry->load(['author', 'participant']);
     }
 
     public function update(User $user, JournalEntry $entry, array $data): JournalEntry
@@ -67,7 +70,7 @@ class JournalService
             'visibility' => array_key_exists('visibility', $data) ? $data['visibility'] : $entry->visibility,
         ]);
 
-        return $entry;
+        return $entry->load(['author', 'participant']);
     }
 
     public function delete(User $user, JournalEntry $entry): void
