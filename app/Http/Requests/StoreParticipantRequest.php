@@ -25,6 +25,9 @@ class StoreParticipantRequest extends FormRequest
             'guardians.*.relationship' => ['nullable', 'string', 'max:255'],
             'guardians.*.is_primary' => ['nullable', 'boolean'],
             'guardians.*.permissions' => ['nullable', 'array'],
+            'create_login' => ['nullable', 'boolean'],
+            'login_email' => ['nullable', 'string', 'email', 'max:255', 'unique:users,email'],
+            'login_password' => ['nullable', 'string', 'min:8', 'max:255'],
         ];
     }
 }

@@ -43,6 +43,7 @@ Route::prefix('v1')->group(function () {
                 Route::patch('tenants/{tenant}/members/{user}', [MemberController::class, 'updateRole']);
                 Route::delete('tenants/{tenant}/members/{user}', [MemberController::class, 'remove']);
 
+                Route::get('my/participants', [ParticipantController::class, 'myParticipants']);
                 Route::apiResource('participants', ParticipantController::class);
                 Route::post('participants/{participant}/guardians', [ParticipantController::class, 'addGuardian']);
                 Route::delete('participants/{participant}/guardians/{user}', [ParticipantController::class, 'removeGuardian']);

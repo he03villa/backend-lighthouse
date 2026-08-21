@@ -12,8 +12,10 @@ use App\Models\Participant;
 use App\Models\User;
 use App\Services\FieldNoteService;
 use App\Services\ParticipantService;
+use App\Tenancy\TenantContext;
 use App\Traits\ApiResponseTrait;
 use Exception;
+use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -55,11 +57,56 @@ class ParticipantController extends Controller
         }
     }
 
+    #[OA\Get(
+        path: '/api/v1/my/participants',
+        tags: ['Participants'],
+        summary: 'Mis participantes',
+        description: 'Retorna los participantes según el rol del usuario: coach/admin ve todos, parent ve sus hijos, participant ve solo sí mismo.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(response: 200, description: 'Lista de participantes', content: new OA\JsonContent(
+                type: 'object',
+                properties: [
+                    new OA\Property(property: 'success', type: 'boolean', example: true),
+                    new OA\Property(property: 'message', type: 'string'),
+                    new OA\Property(property: 'data', type: 'array', items: new OA\Items(ref: '#/components/schemas/Participant')),
+                ],
+            )),
+            new OA\Response(response: 401, description: 'No autenticado', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ],
+    )]
+    public function myParticipants(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $tenant = app(TenantContext::class)->current();
+
+            if (! $tenant) {
+                return $this->successResponse([]);
+            }
+
+            if ($user->hasAnyRole(['owner', 'admin', 'coach'])) {
+                $participants = Participant::query()->with('guardians', 'groups')->get();
+            } elseif ($user->hasAnyRole(['parent', 'participant'])) {
+                $participantIds = $user->guardianships()->pluck('participants.id');
+                $participants = Participant::whereIn('id', $participantIds)->with('guardians', 'groups')->get();
+            } else {
+                $participants = collect();
+            }
+
+            return $this->successResponse(ParticipantResource::collection($participants));
+        } catch (Exception $e) {
+            report($e);
+
+            return $this->errorResponse('Failed to list participants', 500);
+        }
+    }
+
     #[OA\Post(
         path: '/api/v1/participants',
         tags: ['Participants'],
         summary: 'Crear participante',
-        description: 'Crea un participante. Los guardians incluidos se crean como usuarios y se agregan como miembros con rol parent.',
+        description: 'Crea un participante. Los guardians incluidos se crean como usuarios y se agregan como miembros con rol parent. Con create_login se crea un usuario con rol participant (requiere birth_date >= 14 años); si la password no se envía se genera una y se retorna en data.login.',
         security: [['bearerAuth' => []]],
         requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/StoreParticipantRequest')),
         responses: [
@@ -80,9 +127,15 @@ class ParticipantController extends Controller
     public function store(StoreParticipantRequest $request)
     {
         try {
-            $participant = $this->service->create($request->validated());
+            $result = $this->service->create($request->validated());
 
-            return $this->successResponse(new ParticipantResource($participant), 'Participant created', 201);
+            $data = new ParticipantResource($result['participant']);
+
+            if ($result['login']) {
+                $data = array_merge($data->resolve(), ['login' => $result['login']]);
+            }
+
+            return $this->successResponse($data, 'Participant created', 201);
         } catch (HttpException $e) {
             throw $e;
         } catch (Exception $e) {
