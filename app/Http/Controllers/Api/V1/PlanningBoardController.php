@@ -43,8 +43,6 @@ class PlanningBoardController extends Controller
     public function index(Request $request)
     {
         try {
-            abort_unless($request->user()->can('manage_planning'), 403, 'You do not have permission to manage planning.');
-
             return $this->successResponse(PlanningBoardResource::collection($this->service->listBoards()));
         } catch (HttpException|ModelNotFoundException $e) {
             throw $e;
@@ -115,8 +113,6 @@ class PlanningBoardController extends Controller
     public function show(Request $request, PlanningBoard $board)
     {
         try {
-            abort_unless($request->user()->can('manage_planning'), 403, 'You do not have permission to manage planning.');
-
             return $this->successResponse(new PlanningBoardResource($this->service->showBoard($board)));
         } catch (HttpException|ModelNotFoundException $e) {
             throw $e;
