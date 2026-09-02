@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AcceptInvitationRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\TenantResource;
@@ -10,6 +11,7 @@ use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use App\Traits\ApiResponseTrait;
 use Exception;
+use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 class AuthController extends Controller
@@ -185,6 +187,62 @@ class AuthController extends Controller
             report($e);
 
             return $this->unauthorizedResponse('Unauthenticated');
+        }
+    }
+
+    #[OA\Post(
+        path: '/api/v1/auth/accept-invitation',
+        tags: ['Auth'],
+        summary: 'Aceptar invitación',
+        description: 'Permite al usuario invitado establecer su nombre y contraseña para acceder a la plataforma.',
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(
+            type: 'object',
+            required: ['token', 'name', 'password', 'password_confirmation'],
+            properties: [
+                new OA\Property(property: 'token', type: 'string', description: 'Token de invitación recibido por email'),
+                new OA\Property(property: 'name', type: 'string', description: 'Nombre del usuario'),
+                new OA\Property(property: 'password', type: 'string', description: 'Contraseña (mínimo 8 caracteres)'),
+                new OA\Property(property: 'password_confirmation', type: 'string', description: 'Confirmación de contraseña'),
+            ],
+        )),
+        responses: [
+            new OA\Response(response: 200, description: 'Invitación aceptada', content: new OA\JsonContent(
+                type: 'object',
+                properties: [
+                    new OA\Property(property: 'success', type: 'boolean', example: true),
+                    new OA\Property(property: 'message', type: 'string'),
+                    new OA\Property(property: 'data', properties: [
+                        new OA\Property(property: 'user', ref: '#/components/schemas/User'),
+                        new OA\Property(property: 'token', type: 'string'),
+                    ]),
+                ],
+            )),
+            new OA\Response(response: 422, description: 'Token inválido o expirado', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ],
+    )]
+    public function acceptInvitation(AcceptInvitationRequest $request)
+    {
+        try {
+            $validated = $request->validated();
+
+            $result = $this->service->acceptInvitation(
+                $validated['token'],
+                $validated['name'],
+                $validated['password']
+            );
+
+            if (! $result) {
+                return $this->unauthorizedResponse('Token inválido o expirado');
+            }
+
+            return $this->successResponse([
+                'user' => new UserResource($result['user']),
+                'token' => $result['token'],
+            ], 'Invitación aceptada exitosamente');
+        } catch (Exception $e) {
+            report($e);
+
+            return $this->errorResponse('Error al aceptar invitación', 500);
         }
     }
 }

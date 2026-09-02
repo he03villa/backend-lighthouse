@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreFieldNoteRequest;
+use App\Http\Requests\UpdateFieldNoteRequest;
 use App\Http\Resources\FieldNoteResource;
 use App\Models\FieldNote;
 use App\Models\Participant;
@@ -12,6 +13,7 @@ use App\Traits\ApiResponseTrait;
 use Exception;
 use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class FieldNoteController extends Controller
 {
@@ -23,7 +25,7 @@ class FieldNoteController extends Controller
         path: '/api/v1/field-notes',
         tags: ['FieldNotes'],
         summary: 'Listar notas de campo',
-        description: 'Lista las notas de campo. Si se envía participant_id, filtra por participante.',
+        description: 'Lista las notas de campo visibles para el usuario. Filtrado por visibilidad según rol.',
         security: [['bearerAuth' => []]],
         parameters: [
             new OA\Parameter(name: 'participant_id', in: 'query', required: false, description: 'Filtrar por participante', schema: new OA\Schema(type: 'string', format: 'uuid')),
@@ -49,7 +51,7 @@ class FieldNoteController extends Controller
                 ? Participant::findOrFail($request->query('participant_id'))
                 : null;
 
-            return $this->successResponse(FieldNoteResource::collection($this->service->list($participant)));
+            return $this->successResponse(FieldNoteResource::collection($this->service->list($request->user(), $participant)));
         } catch (Exception $e) {
             report($e);
 
@@ -112,14 +114,89 @@ class FieldNoteController extends Controller
             new OA\Response(response: 404, description: 'Nota de campo no encontrada', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ],
     )]
-    public function show(FieldNote $fieldNote)
+    public function show(Request $request, FieldNote $fieldNote)
     {
         try {
-            return $this->successResponse(new FieldNoteResource($fieldNote->load('author', 'participant', 'submission.activity')));
+            return $this->successResponse(new FieldNoteResource($this->service->show($request->user(), $fieldNote)));
+        } catch (HttpException $e) {
+            throw $e;
         } catch (Exception $e) {
             report($e);
 
             return $this->errorResponse('Failed to show field note', 500);
+        }
+    }
+
+    #[OA\Patch(
+        path: '/api/v1/field-notes/{fieldNote}',
+        tags: ['FieldNotes'],
+        summary: 'Actualizar nota de campo',
+        description: 'Solo el autor de la nota puede actualizarla.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'fieldNote', in: 'path', required: true, description: 'UUID de la nota de campo', schema: new OA\Schema(type: 'string', format: 'uuid')),
+        ],
+        requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/UpdateFieldNoteRequest')),
+        responses: [
+            new OA\Response(response: 200, description: 'Nota actualizada', content: new OA\JsonContent(
+                type: 'object',
+                properties: [
+                    new OA\Property(property: 'success', type: 'boolean', example: true),
+                    new OA\Property(property: 'message', type: 'string'),
+                    new OA\Property(property: 'data', ref: '#/components/schemas/FieldNote'),
+                ],
+            )),
+            new OA\Response(response: 401, description: 'No autenticado', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Sin permisos', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Nota no encontrada', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 422, description: 'Error de validación', content: new OA\JsonContent(ref: '#/components/schemas/ValidationErrorResponse')),
+            new OA\Response(response: 500, description: 'Error interno', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ],
+    )]
+    public function update(UpdateFieldNoteRequest $request, FieldNote $fieldNote)
+    {
+        try {
+            return $this->successResponse(
+                new FieldNoteResource($this->service->update($request->user(), $fieldNote, $request->validated())),
+                'Field note updated',
+            );
+        } catch (HttpException $e) {
+            throw $e;
+        } catch (Exception $e) {
+            report($e);
+
+            return $this->errorResponse('Failed to update field note', 500);
+        }
+    }
+
+    #[OA\Delete(
+        path: '/api/v1/field-notes/{fieldNote}',
+        tags: ['FieldNotes'],
+        summary: 'Eliminar nota de campo',
+        description: 'Solo el autor de la nota puede eliminarla.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'fieldNote', in: 'path', required: true, description: 'UUID de la nota de campo', schema: new OA\Schema(type: 'string', format: 'uuid')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Nota eliminada', content: new OA\JsonContent(ref: '#/components/schemas/SuccessResponse')),
+            new OA\Response(response: 401, description: 'No autenticado', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 403, description: 'Sin permisos', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+            new OA\Response(response: 404, description: 'Nota no encontrada', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ],
+    )]
+    public function destroy(Request $request, FieldNote $fieldNote)
+    {
+        try {
+            $this->service->delete($request->user(), $fieldNote);
+
+            return $this->successResponse(null, 'Field note deleted');
+        } catch (HttpException $e) {
+            throw $e;
+        } catch (Exception $e) {
+            report($e);
+
+            return $this->errorResponse('Failed to delete field note', 500);
         }
     }
 }

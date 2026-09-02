@@ -18,7 +18,13 @@ class RolePermissionSeeder extends Seeder
         'submit_evidence',
         'review_evidence',
         'write_journal',
+        'read_field_notes',
         'write_field_notes',
+        'use_ai_assistant',
+        'create_conversations',
+        'send_messages',
+        'create_forum_posts',
+        'moderate_forum_posts',
     ];
 
     public function run(): void

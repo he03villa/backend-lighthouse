@@ -1,13 +1,16 @@
 <?php
 
 use App\Http\Controllers\Api\V1\ActivityController;
+use App\Http\Controllers\Api\V1\AiController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BillingController;
 use App\Http\Controllers\Api\V1\EnrollmentController;
 use App\Http\Controllers\Api\V1\FieldNoteController;
+use App\Http\Controllers\Api\V1\ForumController;
 use App\Http\Controllers\Api\V1\GroupController;
 use App\Http\Controllers\Api\V1\JournalController;
 use App\Http\Controllers\Api\V1\MemberController;
+use App\Http\Controllers\Api\V1\MessageController;
 use App\Http\Controllers\Api\V1\ModuleController;
 use App\Http\Controllers\Api\V1\ParticipantController;
 use App\Http\Controllers\Api\V1\PlanningBoardController;
@@ -17,17 +20,21 @@ use App\Http\Controllers\Api\V1\ProgramController;
 use App\Http\Controllers\Api\V1\SubmissionController;
 use App\Http\Controllers\Api\V1\TenantController;
 use App\Http\Controllers\StripeWebhookController;
+use Illuminate\Broadcasting\BroadcastController;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::post('auth/register', [AuthController::class, 'register']);
-    Route::post('auth/login', [AuthController::class, 'login']);
+    Route::post('auth/login', [AuthController::class, 'login'])->name('login');
     Route::post('auth/refresh', [AuthController::class, 'refresh'])->middleware('auth:api');
+    Route::post('auth/accept-invitation', [AuthController::class, 'acceptInvitation']);
 
     Route::post('stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
 
     Route::middleware('auth:api')->group(function () {
+        Route::post('broadcasting/auth', [BroadcastController::class, 'authenticate']);
+
         Route::get('auth/me', [AuthController::class, 'me']);
         Route::post('auth/logout', [AuthController::class, 'logout']);
 
@@ -75,6 +82,8 @@ Route::prefix('v1')->group(function () {
                 Route::get('field-notes', [FieldNoteController::class, 'index']);
                 Route::post('field-notes', [FieldNoteController::class, 'store']);
                 Route::get('field-notes/{fieldNote}', [FieldNoteController::class, 'show']);
+                Route::patch('field-notes/{fieldNote}', [FieldNoteController::class, 'update']);
+                Route::delete('field-notes/{fieldNote}', [FieldNoteController::class, 'destroy']);
 
                 Route::get('journal', [JournalController::class, 'index']);
                 Route::post('journal', [JournalController::class, 'store']);
@@ -98,6 +107,31 @@ Route::prefix('v1')->group(function () {
                 Route::post('billing/subscriptions/cancel', [BillingController::class, 'cancel']);
                 Route::get('billing/subscriptions/portal', [BillingController::class, 'portal']);
                 Route::get('billing/invoices', [BillingController::class, 'invoices']);
+
+                Route::middleware('throttle:10,1')->group(function () {
+                    Route::post('ai/summarize-progress', [AiController::class, 'summarizeProgress']);
+                    Route::post('ai/suggest-activities', [AiController::class, 'suggestActivities']);
+                    Route::post('ai/explain-activity', [AiController::class, 'explainActivity']);
+                    Route::post('ai/generate-draft', [AiController::class, 'generateDraft']);
+                });
+
+                Route::get('conversations', [MessageController::class, 'index']);
+                Route::post('conversations', [MessageController::class, 'store']);
+                Route::get('conversations/{conversation}', [MessageController::class, 'show']);
+                Route::post('conversations/{conversation}/messages', [MessageController::class, 'sendMessage']);
+                Route::get('conversations/{conversation}/messages', [MessageController::class, 'messages']);
+                Route::patch('conversations/{conversation}/read', [MessageController::class, 'markAsRead']);
+                Route::post('conversations/{conversation}/typing', [MessageController::class, 'typing']);
+
+                Route::get('forum/posts', [ForumController::class, 'index']);
+                Route::post('forum/posts', [ForumController::class, 'store']);
+                Route::get('forum/posts/{post}', [ForumController::class, 'show']);
+                Route::patch('forum/posts/{post}', [ForumController::class, 'update']);
+                Route::delete('forum/posts/{post}', [ForumController::class, 'destroy']);
+                Route::post('forum/posts/{post}/comments', [ForumController::class, 'addComment']);
+                Route::delete('forum/comments/{comment}', [ForumController::class, 'deleteComment']);
+                Route::post('forum/posts/{post}/reactions', [ForumController::class, 'togglePostReaction']);
+                Route::post('forum/comments/{comment}/reactions', [ForumController::class, 'toggleCommentReaction']);
             });
         });
     });

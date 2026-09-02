@@ -13,7 +13,7 @@ use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 use Spatie\Permission\Traits\HasPermissions;
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['name', 'email', 'password', 'timezone', 'locale', 'last_login_at', 'is_super_admin'])]
+#[Fillable(['name', 'email', 'password', 'timezone', 'locale', 'last_login_at', 'is_super_admin', 'invitation_token', 'invitation_expires_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements JWTSubject
 {
@@ -27,6 +27,7 @@ class User extends Authenticatable implements JWTSubject
             'password' => 'hashed',
             'last_login_at' => 'datetime',
             'is_super_admin' => 'boolean',
+            'invitation_expires_at' => 'datetime',
         ];
     }
 

@@ -8,7 +8,9 @@ use App\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use App\Mail\GuardianInvitationMail;
 
 class ParticipantService
 {
@@ -85,6 +87,23 @@ class ParticipantService
 
         if ($tenant) {
             app(TenantService::class)->addMemberWithRole($user, $tenant, 'parent');
+
+            if (! $user->invitation_token && ! $user->email_verified_at) {
+                $invitation = app(AuthService::class)->createInvitation(
+                    $user->email,
+                    $user->name
+                );
+
+                try {
+                    Mail::to($user->email)->send(new GuardianInvitationMail(
+                        $invitation['token'],
+                        $participant->first_name.' '.$participant->last_name,
+                        $tenant->name,
+                    ));
+                } catch (\Exception $e) {
+                    report($e);
+                }
+            }
         }
 
         return $participant->load('guardians', 'groups');

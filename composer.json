@@ -13,6 +13,7 @@
         "laravel/octane": "^2.18",
         "laravel/reverb": "^1.11",
         "laravel/tinker": "^3.0",
+        "openai-php/laravel": "^0.20.0",
         "php-open-source-saver/jwt-auth": "^2.9",
         "spatie/laravel-permission": "^8.3",
         "spatie/laravel-query-builder": "^7.3"

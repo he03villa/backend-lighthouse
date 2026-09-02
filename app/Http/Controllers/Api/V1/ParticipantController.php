@@ -343,7 +343,7 @@ class ParticipantController extends Controller
     public function fieldNotes(Participant $participant)
     {
         try {
-            return $this->successResponse(FieldNoteResource::collection($this->fieldNotes->list($participant)));
+            return $this->successResponse(FieldNoteResource::collection($this->fieldNotes->list(auth()->user(), $participant)));
         } catch (Exception $e) {
             report($e);
 
