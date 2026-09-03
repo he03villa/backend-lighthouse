@@ -40,7 +40,7 @@ class ForumController extends Controller
     {
         try {
             return $this->successResponse(
-                ForumPostResource::collection($this->service->listPosts($request->query('category'))),
+                ForumPostResource::collection($this->service->listPosts($request->query('category'), $request->user())),
             );
         } catch (Exception $e) {
             report($e);
@@ -87,7 +87,7 @@ class ForumController extends Controller
     public function show(ForumPost $post)
     {
         try {
-            return $this->successResponse(new ForumPostResource($this->service->showPost($post)));
+            return $this->successResponse(new ForumPostResource($this->service->showPost($post, request()->user())));
         } catch (Exception $e) {
             report($e);
 

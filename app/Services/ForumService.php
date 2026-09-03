@@ -16,9 +16,9 @@ class ForumService
         protected TenantContext $tenantContext,
     ) {}
 
-    public function listPosts(?string $category = null): LengthAwarePaginator
+    public function listPosts(?string $category = null, ?User $user = null): LengthAwarePaginator
     {
-        return ForumPost::query()
+        $posts = ForumPost::query()
             ->where('tenant_id', $this->tenantContext->id())
             ->with('author')
             ->withCount('comments')
@@ -27,11 +27,34 @@ class ForumService
             ->orderByDesc('pinned')
             ->latest()
             ->paginate(20);
+
+        if ($user) {
+            $postIds = $posts->pluck('id');
+            $userReactions = ForumReaction::whereIn('post_id', $postIds)
+                ->where('user_id', $user->id)
+                ->pluck('type', 'post_id');
+
+            $posts->getCollection()->transform(function ($post) use ($userReactions) {
+                $post->user_reaction = $userReactions->get($post->id);
+                return $post;
+            });
+        }
+
+        return $posts;
     }
 
-    public function showPost(ForumPost $post): ForumPost
+    public function showPost(ForumPost $post, ?User $user = null): ForumPost
     {
-        return $post->load('author', 'comments.author', 'comments.reactions', 'comments.reactions.user', 'reactions', 'reactions.user');
+        $post->load('author', 'comments.author', 'comments.reactions', 'comments.reactions.user', 'reactions', 'reactions.user');
+
+        if ($user) {
+            $post->user_reaction = $post->reactions->firstWhere('user_id', $user->id)?->type;
+            foreach ($post->comments as $comment) {
+                $comment->user_reaction = $comment->reactions->firstWhere('user_id', $user->id)?->type;
+            }
+        }
+
+        return $post;
     }
 
     public function createPost(User $author, array $data): ForumPost

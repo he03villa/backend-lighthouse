@@ -15,6 +15,7 @@ class ForumCommentResource extends JsonResource
             'created_at' => $this->created_at?->toISOString(),
             'author' => new UserResource($this->whenLoaded('author')),
             'reactions_count' => $this->whenCounted('reactions'),
+            'user_reaction' => $this->user_reaction ?? null,
             'reactions' => ForumReactionResource::collection($this->whenLoaded('reactions')),
         ];
     }

@@ -20,6 +20,7 @@ class ForumPostResource extends JsonResource
             'author' => new UserResource($this->whenLoaded('author')),
             'comments_count' => $this->whenCounted('comments'),
             'reactions_count' => $this->whenCounted('reactions'),
+            'user_reaction' => $this->user_reaction ?? null,
             'comments' => ForumCommentResource::collection($this->whenLoaded('comments')),
             'reactions' => ForumReactionResource::collection($this->whenLoaded('reactions')),
         ];
