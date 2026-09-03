@@ -9,9 +9,15 @@ use Illuminate\Database\Eloquent\Collection;
 
 class EnrollmentService
 {
-    public function list(): Collection
+    public function list(?string $participantId = null): Collection
     {
-        return Enrollment::query()->with('participant', 'program', 'progressRecord')->get();
+        $query = Enrollment::query()->with('participant', 'program', 'progressRecord');
+
+        if ($participantId) {
+            $query->where('participant_id', $participantId);
+        }
+
+        return $query->get();
     }
 
     public function create(array $data): Enrollment

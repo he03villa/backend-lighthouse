@@ -20,6 +20,7 @@ class ParticipantResource extends JsonResource
             'created_at' => $this->created_at?->toISOString(),
             'guardians' => GuardianResource::collection($this->whenLoaded('guardians')),
             'groups' => GroupResource::collection($this->whenLoaded('groups')),
+            'enrollments' => EnrollmentResource::collection($this->whenLoaded('enrollments')),
         ];
     }
 }

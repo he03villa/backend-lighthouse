@@ -11,6 +11,7 @@ use App\Services\EnrollmentService;
 use App\Services\ProgressService;
 use App\Traits\ApiResponseTrait;
 use Exception;
+use Illuminate\Http\Request;
 use OpenApi\Attributes as OA;
 
 class EnrollmentController extends Controller
@@ -40,10 +41,11 @@ class EnrollmentController extends Controller
             new OA\Response(response: 500, description: 'Error interno', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
         ],
     )]
-    public function index()
+    public function index(Request $request)
     {
         try {
-            return $this->successResponse(EnrollmentResource::collection($this->service->list()));
+            $participantId = $request->query('participant_id');
+            return $this->successResponse(EnrollmentResource::collection($this->service->list($participantId)));
         } catch (Exception $e) {
             report($e);
 

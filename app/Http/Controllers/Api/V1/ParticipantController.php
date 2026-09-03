@@ -169,7 +169,9 @@ class ParticipantController extends Controller
     public function show(Participant $participant)
     {
         try {
-            return $this->successResponse(new ParticipantResource($participant->load('guardians', 'groups')));
+            return $this->successResponse(new ParticipantResource(
+                $participant->load('guardians', 'groups', 'enrollments.program', 'enrollments.progressRecord')
+            ));
         } catch (Exception $e) {
             report($e);
 
