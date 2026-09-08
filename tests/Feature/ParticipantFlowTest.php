@@ -31,7 +31,7 @@ class ParticipantFlowTest extends TestCase
         }
 
         $this->authedApi($owner['token'], $owner['tenantId'])
-            ->getJson('/api/v1/participants/my-participants')
+            ->getJson('/api/v1/my/participants')
             ->assertStatus(200)
             ->assertJsonCount(2, 'data');
     }
@@ -57,7 +57,7 @@ class ParticipantFlowTest extends TestCase
         $mother = User::where('email', 'madre@example.com')->first();
 
         $this->authedApi(JWTAuth::fromUser($mother), $owner['tenantId'])
-            ->getJson('/api/v1/participants/my-participants')
+            ->getJson('/api/v1/my/participants')
             ->assertStatus(200)
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.full_name', 'Hijo Propio');
@@ -85,7 +85,7 @@ class ParticipantFlowTest extends TestCase
         $participantUser = User::where('email', 'nino@example.com')->first();
 
         $this->authedApi(JWTAuth::fromUser($participantUser), $owner['tenantId'])
-            ->getJson('/api/v1/participants/my-participants')
+            ->getJson('/api/v1/my/participants')
             ->assertStatus(200)
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.full_name', 'Nino Mayor');

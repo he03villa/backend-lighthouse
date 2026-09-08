@@ -9,6 +9,7 @@ use App\Http\Requests\StoreMessageRequest;
 use App\Http\Resources\ConversationResource;
 use App\Http\Resources\MessageResource;
 use App\Models\Conversation;
+use App\Models\Message;
 use App\Services\MessagingService;
 use App\Traits\ApiResponseTrait;
 use Exception;
@@ -35,6 +36,8 @@ class MessageController extends Controller
     )]
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Conversation::class);
+
         try {
             return $this->successResponse(
                 ConversationResource::collection($this->service->listConversations($request->user())),
@@ -60,6 +63,8 @@ class MessageController extends Controller
     )]
     public function store(StoreConversationRequest $request)
     {
+        $this->authorize('create', Conversation::class);
+
         try {
             $conversation = $this->service->createConversation(
                 $request->user(),
@@ -91,6 +96,8 @@ class MessageController extends Controller
     )]
     public function show(Request $request, Conversation $conversation)
     {
+        $this->authorize('view', $conversation);
+
         try {
             return $this->successResponse(
                 new ConversationResource($this->service->showConversation($request->user(), $conversation)),
@@ -121,6 +128,8 @@ class MessageController extends Controller
     )]
     public function sendMessage(StoreMessageRequest $request, Conversation $conversation)
     {
+        $this->authorize('sendMessage', $conversation);
+
         try {
             $message = $this->service->sendMessage(
                 $request->user(),
@@ -191,6 +200,8 @@ class MessageController extends Controller
     )]
     public function markAsRead(Request $request, Conversation $conversation)
     {
+        $this->authorize('view', $conversation);
+
         try {
             $this->service->markAsRead($request->user(), $conversation);
 
@@ -226,6 +237,8 @@ class MessageController extends Controller
     )]
     public function typing(Request $request, Conversation $conversation)
     {
+        $this->authorize('view', $conversation);
+
         try {
             $isTyping = (bool) $request->input('is_typing', true);
 

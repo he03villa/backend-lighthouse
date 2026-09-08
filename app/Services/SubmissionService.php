@@ -71,8 +71,6 @@ class SubmissionService
 
     public function review(ActivitySubmission $submission, User $reviewer, array $data): ActivitySubmission
     {
-        abort_unless($reviewer->can('review_evidence'), 403, 'You are not authorized to review evidence.');
-
         return DB::transaction(function () use ($submission, $reviewer, $data) {
             $status = $data['status'] === 'rejected'
                 ? SubmissionStatus::Rejected

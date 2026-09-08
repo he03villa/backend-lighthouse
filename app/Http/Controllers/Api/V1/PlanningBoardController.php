@@ -42,6 +42,8 @@ class PlanningBoardController extends Controller
     )]
     public function index(Request $request)
     {
+        $this->authorize('viewAny', PlanningBoard::class);
+
         try {
             return $this->successResponse(PlanningBoardResource::collection($this->service->listBoards()));
         } catch (HttpException|ModelNotFoundException $e) {
@@ -77,6 +79,8 @@ class PlanningBoardController extends Controller
     )]
     public function store(StorePlanningBoardRequest $request)
     {
+        $this->authorize('create', PlanningBoard::class);
+
         try {
             $board = $this->service->createBoard($request->validated());
 
@@ -112,6 +116,8 @@ class PlanningBoardController extends Controller
     )]
     public function show(Request $request, PlanningBoard $board)
     {
+        $this->authorize('view', $board);
+
         try {
             return $this->successResponse(new PlanningBoardResource($this->service->showBoard($board)));
         } catch (HttpException|ModelNotFoundException $e) {
@@ -148,6 +154,8 @@ class PlanningBoardController extends Controller
     )]
     public function update(UpdatePlanningBoardRequest $request, PlanningBoard $board)
     {
+        $this->authorize('update', $board);
+
         try {
             return $this->successResponse(
                 new PlanningBoardResource($this->service->updateBoard($board, $request->validated())),
@@ -177,9 +185,9 @@ class PlanningBoardController extends Controller
     )]
     public function destroy(Request $request, PlanningBoard $board)
     {
-        try {
-            abort_unless($request->user()->can('manage_planning'), 403, 'You do not have permission to manage planning.');
+        $this->authorize('delete', $board);
 
+        try {
             $this->service->deleteBoard($board);
 
             return $this->successResponse(null, 'Board deleted');

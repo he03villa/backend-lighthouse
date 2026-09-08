@@ -43,6 +43,8 @@ class EnrollmentController extends Controller
     )]
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Enrollment::class);
+
         try {
             $participantId = $request->query('participant_id');
             return $this->successResponse(EnrollmentResource::collection($this->service->list($participantId)));
@@ -112,6 +114,8 @@ class EnrollmentController extends Controller
     )]
     public function show(Enrollment $enrollment)
     {
+        $this->authorize('view', $enrollment);
+
         try {
             return $this->successResponse(
                 new EnrollmentResource($enrollment->load('participant', 'program', 'progressRecord')),
@@ -141,6 +145,8 @@ class EnrollmentController extends Controller
     )]
     public function destroy(Enrollment $enrollment)
     {
+        $this->authorize('delete', $enrollment);
+
         try {
             $this->service->delete($enrollment);
 
@@ -175,6 +181,8 @@ class EnrollmentController extends Controller
     )]
     public function progress(Enrollment $enrollment)
     {
+        $this->authorize('viewProgress', $enrollment);
+
         try {
             $enrollment->load('progressRecord');
 

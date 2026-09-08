@@ -40,6 +40,8 @@ class GroupController extends Controller
     )]
     public function index()
     {
+        $this->authorize('viewAny', Group::class);
+
         try {
             return $this->successResponse(GroupResource::collection($this->service->list()));
         } catch (Exception $e) {
@@ -104,6 +106,8 @@ class GroupController extends Controller
     )]
     public function show(Group $group)
     {
+        $this->authorize('view', $group);
+
         try {
             return $this->successResponse(new GroupResource($group->load('participants')));
         } catch (Exception $e) {
@@ -140,6 +144,8 @@ class GroupController extends Controller
     )]
     public function update(UpdateGroupRequest $request, Group $group)
     {
+        $this->authorize('update', $group);
+
         try {
             return $this->successResponse(
                 new GroupResource($this->service->update($group, $request->validated())),
@@ -169,6 +175,8 @@ class GroupController extends Controller
     )]
     public function destroy(Group $group)
     {
+        $this->authorize('delete', $group);
+
         try {
             $this->service->delete($group);
 
@@ -206,6 +214,8 @@ class GroupController extends Controller
     )]
     public function addMember(AddGroupMemberRequest $request, Group $group)
     {
+        $this->authorize('manageMembers', $group);
+
         try {
             $participant = Participant::findOrFail($request->validated('participant_id'));
 
@@ -245,6 +255,8 @@ class GroupController extends Controller
     )]
     public function removeMember(Group $group, Participant $participant)
     {
+        $this->authorize('manageMembers', $group);
+
         try {
             return $this->successResponse(
                 new GroupResource($this->service->removeMember($group, $participant)),

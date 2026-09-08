@@ -70,8 +70,6 @@ class ForumService
 
     public function updatePost(User $user, ForumPost $post, array $data): ForumPost
     {
-        $this->assertCanModerate($user, $post);
-
         $post->update([
             'title' => array_key_exists('title', $data) ? $data['title'] : $post->title,
             'content' => array_key_exists('content', $data) ? $data['content'] : $post->content,
@@ -84,8 +82,6 @@ class ForumService
 
     public function deletePost(User $user, ForumPost $post): void
     {
-        $this->assertCanModerate($user, $post);
-
         $post->delete();
     }
 

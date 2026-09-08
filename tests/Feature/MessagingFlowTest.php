@@ -35,7 +35,7 @@ class MessagingFlowTest extends TestCase
 
         $conversationId = $this->authedApi($owner['token'], $owner['tenantId'])
             ->postJson('/api/v1/conversations', [
-                'participant_ids' => [$coach->id],
+                'user_ids' => [$coach->id],
                 'title' => 'Sobre el progreso de Juan',
             ])
             ->assertStatus(201)
@@ -74,7 +74,7 @@ class MessagingFlowTest extends TestCase
 
         $conversationId = $this->authedApi($owner['token'], $owner['tenantId'])
             ->postJson('/api/v1/conversations', [
-                'participant_ids' => [$coach->id],
+                'user_ids' => [$coach->id],
             ])
             ->assertStatus(201)
             ->json('data.id');
@@ -96,7 +96,7 @@ class MessagingFlowTest extends TestCase
 
         $conversationId = $this->authedApi($ownerA['token'], $ownerA['tenantId'])
             ->postJson('/api/v1/conversations', [
-                'participant_ids' => [],
+                'user_ids' => [$ownerA['user']['id']],
             ])
             ->assertStatus(201)
             ->json('data.id');
@@ -112,7 +112,7 @@ class MessagingFlowTest extends TestCase
 
         $conversationId = $this->authedApi($owner['token'], $owner['tenantId'])
             ->postJson('/api/v1/conversations', [
-                'participant_ids' => [],
+                'user_ids' => [$owner['user']['id']],
             ])
             ->assertStatus(201)
             ->json('data.id');
@@ -128,7 +128,7 @@ class MessagingFlowTest extends TestCase
         $owner = $this->registerWithTenant(['email' => 'owner@example.com']);
 
         $this->authedApi($owner['token'], $owner['tenantId'])
-            ->postJson('/api/v1/conversations', ['participant_ids' => []])
+            ->postJson('/api/v1/conversations', ['user_ids' => [$owner['user']['id']]])
             ->assertStatus(201);
 
         $this->authedApi($owner['token'], $owner['tenantId'])

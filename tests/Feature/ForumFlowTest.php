@@ -106,7 +106,7 @@ class ForumFlowTest extends TestCase
         $this->authedApi($owner['token'], $owner['tenantId'])
             ->postJson('/api/v1/tenants/'.$owner['tenantId'].'/members', [
                 'email' => 'other@example.com',
-                'role' => 'coach',
+                'role' => 'participant',
             ]);
 
         $postId = $this->authedApi($owner['token'], $owner['tenantId'])

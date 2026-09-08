@@ -8,10 +8,12 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\TenantResource;
 use App\Http\Resources\UserResource;
+use App\Models\User;
 use App\Services\AuthService;
 use App\Traits\ApiResponseTrait;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 use OpenApi\Attributes as OA;
 
 class AuthController extends Controller
@@ -243,6 +245,72 @@ class AuthController extends Controller
             report($e);
 
             return $this->errorResponse('Error al aceptar invitación', 500);
+        }
+    }
+
+    #[OA\Get(
+        path: '/api/v1/auth/verify-email/{id}/{hash}',
+        tags: ['Auth'],
+        summary: 'Verificar correo electrónico',
+        description: 'Confirma la verificación del correo electrónico del usuario.',
+        parameters: [
+            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'hash', in: 'path', required: true, schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Correo verificado', content: new OA\JsonContent(ref: '#/components/schemas/SuccessResponse')),
+            new OA\Response(response: 404, description: 'Usuario no encontrado o hash inválido', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ],
+    )]
+    public function verifyEmail(string $id, string $hash)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            $expectedHash = sha1($user->getEmailForVerification());
+            if (! hash_equals($expectedHash, $hash)) {
+                return $this->errorResponse('El enlace de verificación es inválido.', 404);
+            }
+
+            if ($user->hasVerifiedEmail()) {
+                return $this->successResponse(null, 'El correo ya ha sido verificado.');
+            }
+
+            $user->markEmailAsVerified();
+
+            return $this->successResponse(null, 'Correo verificado exitosamente.');
+        } catch (Exception $e) {
+            return $this->errorResponse('Usuario no encontrado.', 404);
+        }
+    }
+
+    #[OA\Post(
+        path: '/api/v1/auth/email/verification-notification',
+        tags: ['Auth'],
+        summary: 'Reenviar correo de verificación',
+        description: 'Envía un nuevo correo de verificación al usuario autenticado.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(response: 200, description: 'Correo enviado', content: new OA\JsonContent(ref: '#/components/schemas/SuccessResponse')),
+            new OA\Response(response: 401, description: 'No autenticado', content: new OA\JsonContent(ref: '#/components/schemas/ErrorResponse')),
+        ],
+    )]
+    public function sendVerificationEmail(Request $request)
+    {
+        try {
+            $user = $request->user();
+
+            if ($user->hasVerifiedEmail()) {
+                return $this->successResponse(null, 'El correo ya ha sido verificado.');
+            }
+
+            $user->sendEmailVerificationNotification();
+
+            return $this->successResponse(null, 'Correo de verificación enviado.');
+        } catch (Exception $e) {
+            report($e);
+
+            return $this->errorResponse('Error al enviar correo de verificación.', 500);
         }
     }
 }

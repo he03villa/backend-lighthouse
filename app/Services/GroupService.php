@@ -4,13 +4,13 @@ namespace App\Services;
 
 use App\Models\Group;
 use App\Models\Participant;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class GroupService
 {
-    public function list(): Collection
+    public function list(): LengthAwarePaginator
     {
-        return Group::query()->with('participants')->get();
+        return Group::query()->with('participants')->paginate(20);
     }
 
     public function create(array $data): Group

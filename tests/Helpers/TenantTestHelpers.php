@@ -2,6 +2,8 @@
 
 namespace Tests\Helpers;
 
+use App\Models\User;
+
 trait TenantTestHelpers
 {
     protected function registerWithTenant(array $overrides = []): array
@@ -15,6 +17,11 @@ trait TenantTestHelpers
 
         $response = $this->postJson('/api/v1/auth/register', $payload);
         $response->assertStatus(201);
+
+        $user = User::where('email', $payload['email'])->first();
+        if ($user && ! $user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+        }
 
         return [
             'token' => $response->json('data.token'),

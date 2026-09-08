@@ -61,6 +61,8 @@ class ForumController extends Controller
     )]
     public function store(StoreForumPostRequest $request)
     {
+        $this->authorize('create', ForumPost::class);
+
         try {
             $post = $this->service->createPost($request->user(), $request->validated());
 
@@ -86,6 +88,8 @@ class ForumController extends Controller
     )]
     public function show(ForumPost $post)
     {
+        $this->authorize('view', $post);
+
         try {
             return $this->successResponse(new ForumPostResource($this->service->showPost($post, request()->user())));
         } catch (Exception $e) {
@@ -112,6 +116,8 @@ class ForumController extends Controller
     )]
     public function update(UpdateForumPostRequest $request, ForumPost $post)
     {
+        $this->authorize('update', $post);
+
         try {
             return $this->successResponse(
                 new ForumPostResource($this->service->updatePost($request->user(), $post, $request->validated())),
@@ -141,6 +147,8 @@ class ForumController extends Controller
     )]
     public function destroy(Request $request, ForumPost $post)
     {
+        $this->authorize('delete', $post);
+
         try {
             $this->service->deletePost($request->user(), $post);
 
@@ -169,6 +177,8 @@ class ForumController extends Controller
     )]
     public function addComment(StoreForumCommentRequest $request, ForumPost $post)
     {
+        $this->authorize('create', ForumComment::class);
+
         try {
             $comment = $this->service->createComment($request->user(), $post, $request->validated('content'));
 
@@ -195,6 +205,8 @@ class ForumController extends Controller
     )]
     public function deleteComment(Request $request, ForumComment $comment)
     {
+        $this->authorize('delete', $comment);
+
         try {
             $this->service->deleteComment($request->user(), $comment);
 

@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\JournalEntry;
 use App\Models\User;
 use App\Tenancy\TenantContext;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Spatie\Permission\PermissionRegistrar;
 
 class JournalService
@@ -15,7 +15,7 @@ class JournalService
         protected PermissionRegistrar $permissions,
     ) {}
 
-    public function list(User $user, ?string $participantId = null, ?string $from = null, ?string $to = null): Collection
+    public function list(User $user, ?string $participantId = null, ?string $from = null, ?string $to = null): LengthAwarePaginator
     {
         $query = JournalEntry::query()
             ->with(['author', 'participant'])
@@ -36,7 +36,7 @@ class JournalService
             });
         }
 
-        return $query->get();
+        return $query->paginate(20);
     }
 
     public function show(User $user, JournalEntry $entry): JournalEntry
@@ -61,8 +61,6 @@ class JournalService
 
     public function update(User $user, JournalEntry $entry, array $data): JournalEntry
     {
-        $this->assertAuthor($user, $entry);
-
         $entry->update([
             'participant_id' => array_key_exists('participant_id', $data) ? $data['participant_id'] : $entry->participant_id,
             'entry_date' => array_key_exists('entry_date', $data) ? $data['entry_date'] : $entry->entry_date,
@@ -75,8 +73,6 @@ class JournalService
 
     public function delete(User $user, JournalEntry $entry): void
     {
-        $this->assertAuthor($user, $entry);
-
         $entry->delete();
     }
 

@@ -86,6 +86,8 @@ class JournalController extends Controller
     )]
     public function store(StoreJournalRequest $request)
     {
+        $this->authorize('create', JournalEntry::class);
+
         try {
             $entry = $this->service->create($request->user(), $request->validated());
 
@@ -120,6 +122,8 @@ class JournalController extends Controller
     )]
     public function show(Request $request, JournalEntry $entry)
     {
+        $this->authorize('view', $entry);
+
         try {
             return $this->successResponse(new JournalEntryResource($this->service->show($request->user(), $entry)));
         } catch (HttpException|ModelNotFoundException $e) {
@@ -158,6 +162,8 @@ class JournalController extends Controller
     )]
     public function update(UpdateJournalRequest $request, JournalEntry $entry)
     {
+        $this->authorize('update', $entry);
+
         try {
             return $this->successResponse(
                 new JournalEntryResource($this->service->update($request->user(), $entry, $request->validated())),
@@ -190,6 +196,8 @@ class JournalController extends Controller
     )]
     public function destroy(Request $request, JournalEntry $entry)
     {
+        $this->authorize('delete', $entry);
+
         try {
             $this->service->delete($request->user(), $entry);
 

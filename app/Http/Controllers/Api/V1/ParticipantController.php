@@ -12,7 +12,6 @@ use App\Models\Participant;
 use App\Models\User;
 use App\Services\FieldNoteService;
 use App\Services\ParticipantService;
-use App\Tenancy\TenantContext;
 use App\Traits\ApiResponseTrait;
 use Exception;
 use Illuminate\Http\Request;
@@ -48,6 +47,8 @@ class ParticipantController extends Controller
     )]
     public function index()
     {
+        $this->authorize('viewAny', Participant::class);
+
         try {
             return $this->successResponse(ParticipantResource::collection($this->service->list()));
         } catch (Exception $e) {
@@ -78,21 +79,7 @@ class ParticipantController extends Controller
     public function myParticipants(Request $request)
     {
         try {
-            $user = $request->user();
-            $tenant = app(TenantContext::class)->current();
-
-            if (! $tenant) {
-                return $this->successResponse([]);
-            }
-
-            if ($user->hasAnyRole(['owner', 'admin', 'coach'])) {
-                $participants = Participant::query()->with('guardians', 'groups')->get();
-            } elseif ($user->hasAnyRole(['parent', 'participant'])) {
-                $participantIds = $user->guardianships()->pluck('participants.id');
-                $participants = Participant::whereIn('id', $participantIds)->with('guardians', 'groups')->get();
-            } else {
-                $participants = collect();
-            }
+            $participants = $this->service->myParticipants($request->user());
 
             return $this->successResponse(ParticipantResource::collection($participants));
         } catch (Exception $e) {
@@ -168,6 +155,8 @@ class ParticipantController extends Controller
     )]
     public function show(Participant $participant)
     {
+        $this->authorize('view', $participant);
+
         try {
             return $this->successResponse(new ParticipantResource(
                 $participant->load('guardians', 'groups', 'enrollments.program', 'enrollments.progressRecord')
@@ -206,6 +195,8 @@ class ParticipantController extends Controller
     )]
     public function update(UpdateParticipantRequest $request, Participant $participant)
     {
+        $this->authorize('update', $participant);
+
         try {
             return $this->successResponse(
                 new ParticipantResource($this->service->update($participant, $request->validated())),
@@ -235,6 +226,8 @@ class ParticipantController extends Controller
     )]
     public function destroy(Participant $participant)
     {
+        $this->authorize('delete', $participant);
+
         try {
             $this->service->delete($participant);
 
@@ -272,6 +265,8 @@ class ParticipantController extends Controller
     )]
     public function addGuardian(AttachGuardianRequest $request, Participant $participant)
     {
+        $this->authorize('addGuardian', $participant);
+
         try {
             $data = $request->validated();
 
@@ -310,6 +305,8 @@ class ParticipantController extends Controller
     )]
     public function removeGuardian(Participant $participant, User $user)
     {
+        $this->authorize('removeGuardian', $participant);
+
         try {
             $this->service->removeGuardian($participant, $user);
 

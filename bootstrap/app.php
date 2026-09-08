@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\CleanupTenancy;
 use App\Http\Middleware\InitializeTenant;
+use App\Http\Middleware\RequestId;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
@@ -22,9 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->api(prepend: CleanupTenancy::class, remove: SubstituteBindings::class);
+        $middleware->append(RequestId::class);
 
         $middleware->alias([
             'tenant' => InitializeTenant::class,
+            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

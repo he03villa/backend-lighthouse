@@ -48,6 +48,8 @@ class ProgramController extends Controller
     )]
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Program::class);
+
         try {
             $published = $request->filled('published') ? $request->boolean('published') : null;
 
@@ -116,6 +118,8 @@ class ProgramController extends Controller
     )]
     public function uploadThumbnail(StoreThumbnailRequest $request)
     {
+        $this->authorize('create', Program::class);
+
         try {
             $url = $this->service->storeThumbnail($request->validated()['thumbnail']);
 
@@ -165,6 +169,8 @@ class ProgramController extends Controller
     )]
     public function show(Program $program)
     {
+        $this->authorize('view', $program);
+
         try {
             return $this->successResponse(new ProgramResource($program->load('modules.activities')));
         } catch (Exception $e) {
@@ -201,6 +207,8 @@ class ProgramController extends Controller
     )]
     public function update(UpdateProgramRequest $request, Program $program)
     {
+        $this->authorize('update', $program);
+
         try {
             return $this->successResponse(
                 new ProgramResource($this->service->update($program, $request->validated())),
@@ -230,6 +238,8 @@ class ProgramController extends Controller
     )]
     public function destroy(Program $program)
     {
+        $this->authorize('delete', $program);
+
         try {
             $this->service->delete($program);
 
@@ -265,6 +275,8 @@ class ProgramController extends Controller
     )]
     public function publish(Program $program)
     {
+        $this->authorize('publish', $program);
+
         try {
             return $this->successResponse(new ProgramResource($this->service->publish($program)), 'Program published');
         } catch (Exception $e) {
@@ -298,6 +310,8 @@ class ProgramController extends Controller
     )]
     public function unpublish(Program $program)
     {
+        $this->authorize('publish', $program);
+
         try {
             return $this->successResponse(new ProgramResource($this->service->unpublish($program)), 'Program unpublished');
         } catch (Exception $e) {

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\UserFactory;
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,7 +19,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasPermissions, HasRoles, Notifiable;
+    use HasFactory, HasPermissions, HasRoles, MustVerifyEmailTrait, Notifiable;
 
     protected function casts(): array
     {
@@ -53,5 +54,10 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->belongsToMany(Participant::class, 'participant_guardians')
             ->withPivot('relationship', 'is_primary', 'permissions');
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new \App\Notifications\VerifyEmail);
     }
 }

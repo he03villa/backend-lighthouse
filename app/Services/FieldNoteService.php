@@ -7,7 +7,7 @@ use App\Models\FieldNote;
 use App\Models\Participant;
 use App\Models\User;
 use App\Tenancy\TenantContext;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Spatie\Permission\PermissionRegistrar;
 
 class FieldNoteService
@@ -17,7 +17,7 @@ class FieldNoteService
         protected PermissionRegistrar $permissions,
     ) {}
 
-    public function list(User $user, ?Participant $participant = null): Collection
+    public function list(User $user, ?Participant $participant = null): LengthAwarePaginator
     {
         $query = FieldNote::query()
             ->with('author', 'participant', 'submission.activity')
@@ -35,7 +35,7 @@ class FieldNoteService
             });
         }
 
-        return $query->latest('session_date')->get();
+        return $query->latest('session_date')->paginate(20);
     }
 
     public function show(User $user, FieldNote $note): FieldNote
@@ -59,8 +59,6 @@ class FieldNoteService
 
     public function update(User $user, FieldNote $note, array $data): FieldNote
     {
-        $this->assertAuthor($user, $note);
-
         $note->update([
             'participant_id' => array_key_exists('participant_id', $data) ? $data['participant_id'] : $note->participant_id,
             'session_date' => array_key_exists('session_date', $data) ? $data['session_date'] : $note->session_date,
@@ -73,8 +71,6 @@ class FieldNoteService
 
     public function delete(User $user, FieldNote $note): void
     {
-        $this->assertAuthor($user, $note);
-
         $note->delete();
     }
 

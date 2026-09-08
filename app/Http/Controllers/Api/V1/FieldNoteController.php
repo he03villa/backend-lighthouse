@@ -82,6 +82,8 @@ class FieldNoteController extends Controller
     )]
     public function store(StoreFieldNoteRequest $request)
     {
+        $this->authorize('create', FieldNote::class);
+
         try {
             $note = $this->service->create($request->user(), $request->validated());
 
@@ -116,6 +118,8 @@ class FieldNoteController extends Controller
     )]
     public function show(Request $request, FieldNote $fieldNote)
     {
+        $this->authorize('view', $fieldNote);
+
         try {
             return $this->successResponse(new FieldNoteResource($this->service->show($request->user(), $fieldNote)));
         } catch (HttpException $e) {
@@ -155,6 +159,8 @@ class FieldNoteController extends Controller
     )]
     public function update(UpdateFieldNoteRequest $request, FieldNote $fieldNote)
     {
+        $this->authorize('update', $fieldNote);
+
         try {
             return $this->successResponse(
                 new FieldNoteResource($this->service->update($request->user(), $fieldNote, $request->validated())),
@@ -187,6 +193,8 @@ class FieldNoteController extends Controller
     )]
     public function destroy(Request $request, FieldNote $fieldNote)
     {
+        $this->authorize('delete', $fieldNote);
+
         try {
             $this->service->delete($request->user(), $fieldNote);
 

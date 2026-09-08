@@ -88,6 +88,9 @@ class AuthTest extends TestCase
 
         $token = $response->json('data.token');
 
+        $user = User::where('email', 'multi@example.com')->first();
+        $user->markEmailAsVerified();
+
         $this->withToken($token)
             ->postJson('/api/v1/tenants', ['name' => 'Club B'])
             ->assertStatus(201);
@@ -121,7 +124,7 @@ class AuthTest extends TestCase
             ->assertJsonPath('data.user.roles', ['super-admin']);
 
         $permissions = $login->json('data.user.permissions');
-        $this->assertCount(10, $permissions);
+        $this->assertCount(16, $permissions);
         $this->assertContains('manage_tenant', $permissions);
         $this->assertContains('write_journal', $permissions);
     }

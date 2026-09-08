@@ -2,21 +2,20 @@
 
 namespace App\Services;
 
+use App\Jobs\SendGuardianInvitationJob;
 use App\Models\Participant;
 use App\Models\User;
 use App\Tenancy\TenantContext;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use App\Mail\GuardianInvitationMail;
 
 class ParticipantService
 {
-    public function list(): Collection
+    public function list()
     {
-        return Participant::query()->with('guardians', 'groups')->get();
+        return Participant::query()->with('guardians', 'groups')->paginate(20);
     }
 
     /**
@@ -60,6 +59,27 @@ class ParticipantService
         return ['participant' => $participant, 'login' => $login];
     }
 
+    public function myParticipants(User $user): Collection
+    {
+        $tenant = app(TenantContext::class)->current();
+
+        if (! $tenant) {
+            return collect();
+        }
+
+        if ($user->hasAnyRole(['owner', 'admin', 'coach'])) {
+            return Participant::query()->with('guardians', 'groups')->get();
+        }
+
+        if ($user->hasAnyRole(['parent', 'participant'])) {
+            $participantIds = $user->guardianships()->pluck('participants.id');
+
+            return Participant::whereIn('id', $participantIds)->with('guardians', 'groups')->get();
+        }
+
+        return collect();
+    }
+
     public function update(Participant $participant, array $data): Participant
     {
         $participant->update($data);
@@ -94,15 +114,12 @@ class ParticipantService
                     $user->name
                 );
 
-                try {
-                    Mail::to($user->email)->send(new GuardianInvitationMail(
-                        $invitation['token'],
-                        $participant->first_name.' '.$participant->last_name,
-                        $tenant->name,
-                    ));
-                } catch (\Exception $e) {
-                    report($e);
-                }
+                SendGuardianInvitationJob::dispatch(
+                    $user->email,
+                    $participant->first_name.' '.$participant->last_name,
+                    $tenant->name,
+                    $invitation['token']
+                );
             }
         }
 

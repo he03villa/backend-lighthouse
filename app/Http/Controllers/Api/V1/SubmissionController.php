@@ -47,6 +47,8 @@ class SubmissionController extends Controller
     )]
     public function index(Request $request)
     {
+        $this->authorize('viewAny', ActivitySubmission::class);
+
         try {
             $submissions = $this->service->list($request->only(['status', 'enrollment_id', 'activity_id']));
 
@@ -81,6 +83,8 @@ class SubmissionController extends Controller
     )]
     public function show(ActivitySubmission $submission)
     {
+        $this->authorize('view', $submission);
+
         try {
             return $this->successResponse(new ActivitySubmissionResource($submission->load('evidences', 'activity', 'enrollment.participant', 'enrollment.program')));
         } catch (Exception $e) {
@@ -161,6 +165,8 @@ class SubmissionController extends Controller
     )]
     public function review(ReviewSubmissionRequest $request, ActivitySubmission $submission)
     {
+        $this->authorize('review', $submission);
+
         try {
             $submission = $this->service->review($submission, $request->user(), $request->validated());
 
