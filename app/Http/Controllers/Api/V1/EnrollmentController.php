@@ -47,7 +47,8 @@ class EnrollmentController extends Controller
 
         try {
             $participantId = $request->query('participant_id');
-            return $this->successResponse(EnrollmentResource::collection($this->service->list($participantId)));
+
+            return $this->successResponse(EnrollmentResource::collection($this->service->list($participantId, $request->user())));
         } catch (Exception $e) {
             report($e);
 

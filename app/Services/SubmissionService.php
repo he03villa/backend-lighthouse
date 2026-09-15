@@ -18,9 +18,14 @@ use Illuminate\Support\Facades\DB;
 
 class SubmissionService
 {
-    public function list(array $filters = []): Collection
+    public function list(array $filters = [], ?User $user = null): Collection
     {
         $query = ActivitySubmission::query()->with('activity', 'enrollment.participant', 'enrollment.program', 'evidences');
+
+        if ($user && $user->hasRole('parent')) {
+            $participantIds = $user->guardianships()->pluck('participants.id');
+            $query->whereHas('enrollment', fn ($q) => $q->whereIn('participant_id', $participantIds));
+        }
 
         if (! empty($filters['status'])) {
             $query->where('status', SubmissionStatus::from($filters['status']));

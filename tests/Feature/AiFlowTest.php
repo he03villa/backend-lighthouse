@@ -4,13 +4,13 @@ namespace Tests\Feature;
 
 use App\Models\Activity;
 use App\Models\Module;
-use App\Models\Participant;
 use App\Models\Program;
-use App\Services\AiService;
+use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use OpenAI\Laravel\Facades\OpenAI;
 use OpenAI\Responses\Chat\CreateResponse;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 use Tests\Helpers\TenantTestHelpers;
 use Tests\TestCase;
 
@@ -76,8 +76,8 @@ class AiFlowTest extends TestCase
             ])
             ->assertStatus(201);
 
-        $parent = \App\Models\User::where('email', 'parent@example.com')->first();
-        $parentToken = \PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth::fromUser($parent);
+        $parent = User::where('email', 'parent@example.com')->first();
+        $parentToken = JWTAuth::fromUser($parent);
 
         OpenAI::fake([
             CreateResponse::fake([

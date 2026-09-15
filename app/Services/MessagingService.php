@@ -9,6 +9,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
 use App\Tenancy\TenantContext;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -18,7 +19,7 @@ class MessagingService
         protected TenantContext $tenantContext,
     ) {}
 
-    public function listConversations(User $user): \Illuminate\Database\Eloquent\Collection
+    public function listConversations(User $user): Collection
     {
         return Conversation::query()
             ->where('tenant_id', $this->tenantContext->id())
@@ -40,7 +41,7 @@ class MessagingService
     {
         $allUserIds = array_unique(array_merge([$creator->id], $userIds));
 
-        return DB::transaction(function () use ($creator, $allUserIds, $title) {
+        return DB::transaction(function () use ($allUserIds, $title) {
             $conversation = Conversation::create([
                 'tenant_id' => $this->tenantContext->id(),
                 'is_group' => count($allUserIds) > 2,

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\VerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -58,6 +59,6 @@ class User extends Authenticatable implements JWTSubject
 
     public function sendEmailVerificationNotification(): void
     {
-        $this->notify(new \App\Notifications\VerifyEmail);
+        $this->notify(new VerifyEmail);
     }
 }

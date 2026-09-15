@@ -9,7 +9,7 @@ class ActivitySubmissionPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['owner', 'admin', 'coach', 'staff']);
+        return $user->hasAnyRole(['owner', 'admin', 'coach', 'staff', 'parent']);
     }
 
     public function view(User $user, ActivitySubmission $submission): bool

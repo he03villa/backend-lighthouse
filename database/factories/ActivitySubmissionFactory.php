@@ -2,8 +2,10 @@
 
 namespace Database\Factories;
 
+use App\Models\Activity;
 use App\Models\ActivitySubmission;
 use App\Models\Enrollment;
+use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ActivitySubmissionFactory extends Factory
@@ -14,8 +16,8 @@ class ActivitySubmissionFactory extends Factory
     {
         return [
             'enrollment_id' => Enrollment::factory(),
-            'activity_id' => \App\Models\Activity::factory(),
-            'tenant_id' => fn (array $attributes) => Enrollment::find($attributes['enrollment_id'])?->tenant_id ?? \App\Models\Tenant::factory(),
+            'activity_id' => Activity::factory(),
+            'tenant_id' => fn (array $attributes) => Enrollment::find($attributes['enrollment_id'])?->tenant_id ?? Tenant::factory(),
             'status' => 'pending',
             'submitted_at' => fake()->dateTimeBetween('-30 days', 'now'),
             'reviewed_at' => null,

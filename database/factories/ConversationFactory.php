@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Conversation;
+use App\Models\Participant;
 use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -14,7 +15,7 @@ class ConversationFactory extends Factory
     {
         return [
             'tenant_id' => Tenant::factory(),
-            'participant_id' => \App\Models\Participant::factory(),
+            'participant_id' => Participant::factory(),
             'subject' => fake()->sentence(),
         ];
     }

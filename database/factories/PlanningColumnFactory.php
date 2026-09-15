@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\PlanningColumn;
 use App\Models\PlanningBoard;
+use App\Models\PlanningColumn;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class PlanningColumnFactory extends Factory

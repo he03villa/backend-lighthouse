@@ -50,7 +50,7 @@ class SubmissionController extends Controller
         $this->authorize('viewAny', ActivitySubmission::class);
 
         try {
-            $submissions = $this->service->list($request->only(['status', 'enrollment_id', 'activity_id']));
+            $submissions = $this->service->list($request->only(['status', 'enrollment_id', 'activity_id']), $request->user());
 
             return $this->successResponse(ActivitySubmissionResource::collection($submissions));
         } catch (Exception $e) {

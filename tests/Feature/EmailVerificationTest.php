@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Notifications\VerifyEmail;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 use Tests\Helpers\TenantTestHelpers;
 use Tests\TestCase;
 
@@ -25,7 +27,7 @@ class EmailVerificationTest extends TestCase
             'email_verified_at' => null,
         ]);
 
-        $token = \PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth::fromUser($user);
+        $token = JWTAuth::fromUser($user);
 
         $this->authedApi($token)
             ->getJson('/api/v1/tenants')
@@ -89,7 +91,7 @@ class EmailVerificationTest extends TestCase
             ->assertStatus(200)
             ->assertJsonPath('success', true);
 
-        Notification::assertSentTo($user, \App\Notifications\VerifyEmail::class);
+        Notification::assertSentTo($user, VerifyEmail::class);
     }
 
     public function test_already_verified_user_gets_appropriate_message(): void

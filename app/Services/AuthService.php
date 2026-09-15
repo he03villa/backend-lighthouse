@@ -116,6 +116,7 @@ class AuthService
         $user->update([
             'name' => $name,
             'password' => Hash::make($password),
+            'email_verified_at' => now(),
             'invitation_token' => null,
             'invitation_expires_at' => null,
         ]);

@@ -8,7 +8,6 @@ use App\Models\ForumReaction;
 use App\Models\User;
 use App\Tenancy\TenantContext;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
 
 class ForumService
 {
@@ -36,6 +35,7 @@ class ForumService
 
             $posts->getCollection()->transform(function ($post) use ($userReactions) {
                 $post->user_reaction = $userReactions->get($post->id);
+
                 return $post;
             });
         }
@@ -118,10 +118,12 @@ class ForumService
         if ($existing) {
             if ($existing->type === $type) {
                 $existing->delete();
+
                 return false;
             }
 
             $existing->update(['type' => $type]);
+
             return true;
         }
 

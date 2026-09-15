@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\PlanningTask;
 use App\Models\PlanningColumn;
+use App\Models\PlanningTask;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class PlanningTaskFactory extends Factory

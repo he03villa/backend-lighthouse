@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\JournalEntry;
+use App\Models\Participant;
+use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -13,9 +15,9 @@ class JournalEntryFactory extends Factory
     public function definition(): array
     {
         return [
-            'tenant_id' => \App\Models\Tenant::factory(),
+            'tenant_id' => Tenant::factory(),
             'author_id' => User::factory(),
-            'participant_id' => \App\Models\Participant::factory(),
+            'participant_id' => Participant::factory(),
             'title' => fake()->sentence(),
             'content' => fake()->paragraphs(3, true),
             'privacy' => 'private',

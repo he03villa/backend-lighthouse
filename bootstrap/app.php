@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CleanupTenancy;
+use App\Http\Middleware\EnsureEmailIsVerified;
 use App\Http\Middleware\InitializeTenant;
 use App\Http\Middleware\RequestId;
 use Illuminate\Auth\AuthenticationException;
@@ -27,7 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'tenant' => InitializeTenant::class,
-            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
+            'verified' => EnsureEmailIsVerified::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

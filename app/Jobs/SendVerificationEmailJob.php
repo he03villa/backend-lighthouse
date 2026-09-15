@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class SendVerificationEmailJob implements ShouldQueue
 {
@@ -29,7 +30,7 @@ class SendVerificationEmailJob implements ShouldQueue
 
     public function failed(\Throwable $exception): void
     {
-        \Illuminate\Support\Facades\Log::error('Failed to send verification email', [
+        Log::error('Failed to send verification email', [
             'user_id' => $this->user->id,
             'email' => $this->user->email,
             'error' => $exception->getMessage(),

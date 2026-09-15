@@ -6,7 +6,6 @@ use App\Models\Activity;
 use App\Models\Participant;
 use App\Models\Program;
 use App\Models\Tenant;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use OpenAI\Laravel\Facades\OpenAI;
 use Throwable;
@@ -38,7 +37,7 @@ class AiService
         }
 
         return $this->chat(
-            "Eres un asistente educativo. Resume el progreso del siguiente participante de forma clara y concisa. No hagas diagnósticos clínicos ni alertas médicas. Concéntrate en logros educativos y áreas de oportunidad.",
+            'Eres un asistente educativo. Resume el progreso del siguiente participante de forma clara y concisa. No hagas diagnósticos clínicos ni alertas médicas. Concéntrate en logros educativos y áreas de oportunidad.',
             $context,
         );
     }
@@ -61,7 +60,7 @@ class AiService
         }
 
         $response = $this->chat(
-            "Eres un asistente educativo. Sugiere 3 actividades complementarias similares a la actividad descrita. Para cada una, responde con un JSON array de objetos con campos: name, description, objective. No hagas diagnósticos. Solo suggestions educativas.",
+            'Eres un asistente educativo. Sugiere 3 actividades complementarias similares a la actividad descrita. Para cada una, responde con un JSON array de objetos con campos: name, description, objective. No hagas diagnósticos. Solo suggestions educativas.',
             $context,
         );
 
@@ -79,7 +78,7 @@ class AiService
         $context .= "Nivel: {$activity->level}\n";
 
         return $this->chat(
-            "Eres un asistente educativo. Explica la siguiente actividad en lenguaje sencillo para padres/familias. Sé breve (2-3 párrafos máximo). Usa un tono cálido y profesional. No uses jerga técnica ni diagnósticos.",
+            'Eres un asistente educativo. Explica la siguiente actividad en lenguaje sencillo para padres/familias. Sé breve (2-3 párrafos máximo). Usa un tono cálido y profesional. No uses jerga técnica ni diagnósticos.',
             $context,
         );
     }
@@ -87,8 +86,8 @@ class AiService
     public function generateDraft(Tenant $tenant, string $type, array $context): array
     {
         $prompt = match ($type) {
-            'goal' => "Eres un asistente educativo. Genera un borrador de meta educativa basado en el siguiente contexto. Responde con JSON: {\"title\": \"...\", \"description\": \"...\", \"target_date\": \"YYYY-MM-DD\"}. Contexto: " . json_encode($context),
-            'activity' => "Eres un asistente educativo. Genera un borrador de actividad educativa. Responde con JSON: {\"name\": \"...\", \"description\": \"...\", \"objective\": \"...\", \"level\": \"...\"}. Contexto: " . json_encode($context),
+            'goal' => 'Eres un asistente educativo. Genera un borrador de meta educativa basado en el siguiente contexto. Responde con JSON: {"title": "...", "description": "...", "target_date": "YYYY-MM-DD"}. Contexto: '.json_encode($context),
+            'activity' => 'Eres un asistente educativo. Genera un borrador de actividad educativa. Responde con JSON: {"name": "...", "description": "...", "objective": "...", "level": "..."}. Contexto: '.json_encode($context),
             default => abort(422, 'Invalid draft type. Must be "goal" or "activity".'),
         };
 

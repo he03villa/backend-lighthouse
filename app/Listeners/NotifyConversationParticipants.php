@@ -25,7 +25,7 @@ class NotifyConversationParticipants implements ShouldQueue
                     continue;
                 }
 
-                broadcast()->to("user.{$user->id}", new \App\Events\ConversationUpdated($conversation));
+                broadcast()->to("user.{$user->id}", new ConversationUpdated($conversation));
             }
         } catch (\Exception $e) {
             Log::error('Failed to notify conversation participants', [

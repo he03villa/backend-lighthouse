@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Activity;
 use App\Models\Module;
+use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ActivityFactory extends Factory
@@ -14,7 +15,7 @@ class ActivityFactory extends Factory
     {
         return [
             'module_id' => Module::factory(),
-            'tenant_id' => fn (array $attributes) => Module::find($attributes['module_id'])?->tenant_id ?? \App\Models\Tenant::factory(),
+            'tenant_id' => fn (array $attributes) => Module::find($attributes['module_id'])?->tenant_id ?? Tenant::factory(),
             'name' => fake()->sentence(3),
             'description' => fake()->paragraph(),
             'objective' => fake()->sentence(),

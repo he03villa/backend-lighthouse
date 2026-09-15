@@ -5,13 +5,19 @@ namespace App\Services;
 use App\Enums\EnrollmentStatus;
 use App\Events\EnrollmentCreated;
 use App\Models\Enrollment;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
 class EnrollmentService
 {
-    public function list(?string $participantId = null): Collection
+    public function list(?string $participantId = null, ?User $user = null): Collection
     {
         $query = Enrollment::query()->with('participant', 'program', 'progressRecord');
+
+        if ($user && $user->hasRole('parent')) {
+            $participantIds = $user->guardianships()->pluck('participants.id');
+            $query->whereIn('participant_id', $participantIds);
+        }
 
         if ($participantId) {
             $query->where('participant_id', $participantId);

@@ -23,7 +23,7 @@ class ProgramPolicy
         }
 
         if ($user->hasAnyRole(['parent', 'participant'])) {
-            return $program->status === 'published';
+            return $program->is_published;
         }
 
         return false;

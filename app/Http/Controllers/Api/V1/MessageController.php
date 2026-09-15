@@ -9,7 +9,6 @@ use App\Http\Requests\StoreMessageRequest;
 use App\Http\Resources\ConversationResource;
 use App\Http\Resources\MessageResource;
 use App\Models\Conversation;
-use App\Models\Message;
 use App\Services\MessagingService;
 use App\Traits\ApiResponseTrait;
 use Exception;

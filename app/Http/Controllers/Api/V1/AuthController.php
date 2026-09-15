@@ -13,7 +13,6 @@ use App\Services\AuthService;
 use App\Traits\ApiResponseTrait;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\URL;
 use OpenApi\Attributes as OA;
 
 class AuthController extends Controller
